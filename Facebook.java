@@ -5,6 +5,8 @@ import android.util.Log;
 import com.etiaro.facebook.functions.Login;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Created by jakub on 15.03.18.
@@ -21,9 +23,5 @@ public class Facebook {
         return instance;
     }
 
-    private static HashMap<String, Account> accounts = new HashMap<>();
-    public void addAccount(String id, Account ac){  accounts.put(id, ac);   }
-    public void getAccount(String id){ accounts.get(id);    }
-
-
+    public HashMap<String, Account> accounts = new HashMap<>();
 }

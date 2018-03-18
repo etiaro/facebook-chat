@@ -4,6 +4,10 @@ import android.util.Log;
 
 import com.etiaro.facebook.functions.GetUserInfo;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.net.CookieManager;
 import java.net.HttpCookie;
@@ -46,6 +50,29 @@ public class Account {
 
         clientID = Integer.toHexString(new Random().nextInt(2147483647) | 0);
     }
+    public Account(String JSON) throws JSONException {
+        JSONObject obj = new JSONObject(JSON);
+        login = obj.getString("login");
+        password = obj.getString("password");
+        revision = obj.getString("revision");
+        fb_dtsg = obj.getString("fb_dtsg");
+        ttstamp = obj.getString("ttstamp");
+        firstName = obj.getString("firstName");
+        name = obj.getString("name");
+        userID = obj.getString("userID");
+        clientID = obj.getString("clientID");
+        loggedIn = obj.getBoolean("loggedIn");
+        reqCounter = obj.getInt("reqCounter");
+        info.firstName = obj.getJSONObject("info").getString("firstName");
+        info.name = obj.getJSONObject("info").getString("name");
+        info.gender = obj.getJSONObject("info").getString("gender");
+        info.isFriend = obj.getJSONObject("info").getBoolean("isFriend");
+        info.profileUrl = obj.getJSONObject("info").getString("profileUrl");
+        info.type = obj.getJSONObject("info").getString("type");
+        info.vanity = obj.getJSONObject("info").getString("vanity");
+
+        //TODO cookies parsing
+    }
 
     public void loadUserdata(){
         info = new GetUserInfo(this, this.userID).getUserInfo();
@@ -67,5 +94,25 @@ public class Account {
                 "&__a=1"+
                 "&fb_dtsg="+fb_dtsg+
                 "&jazoest="+ttstamp;
+    }
+    public String toString(){//TODO stringify account
+        JSONObject obj = new JSONObject();
+        try {
+            obj.put("login", login).put("password", password)
+            .put("revision", revision).put("fb_dtsg", fb_dtsg)
+            .put("ttstamp",ttstamp).put("firstName",firstName)
+            .put("name", name).put("userID", userID).put("clientID",clientID)
+            .put("loggedIn", loggedIn).put("reqCounter", reqCounter);
+            obj.put("info", new JSONObject()
+                    .put("firstName", info.firstName).put("name", info.name)
+                    .put("gender", info.gender).put("isFriend", info.isFriend)
+                    .put("profileUrl", info.profileUrl).put("type", info.type)
+                    .put("vanity",info.vanity));
+            obj.put("cookies", new JSONObject()); //TODO cookies stringify
+        } catch (JSONException e) {
+            Log.e("talkie", "Critical error while saving account: "+e.toString());
+        }
+
+        return obj.toString();
     }
 }
