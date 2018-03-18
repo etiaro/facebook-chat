@@ -77,6 +77,8 @@ public class Login extends AsyncTask<Interfaces.LoginCallback, Void, Boolean> {
             ac.cookies = sl.getCookiesManager();
 
             Log.d("REQUEST", "Pull 1");
+
+            //TODO Lot of 400 statusCode errors here
             params = ac.getFormParams()+"&channel=p_" + ac.getUserID()+
                     "&seq=0"+
                     "&partition=-2"+

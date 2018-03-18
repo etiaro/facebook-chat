@@ -2,6 +2,9 @@ package com.etiaro.facebook;
 
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.MalformedJsonException;
+
+import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -112,6 +115,22 @@ public class Utils {
         } catch (UnsupportedEncodingException e) {
             return "null";
         }
+    }
+
+    public static String checkAndFormatResponse(String response){
+        if(response.indexOf("{") >0)
+            response = response.substring(response.indexOf("{"));
+        try{
+            String er = new JSONObject(response).getString("error");
+            if(er != null)
+                return null;
+            if(er.equals("1357001")){
+                return "NotLoggedIn";
+            }
+        }catch (Exception e){
+            return response;
+        }
+        return response;
     }
 
     //NEVER call from main thread!

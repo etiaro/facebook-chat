@@ -34,14 +34,18 @@ public class GetUserInfo extends AsyncTask<Interfaces.UserInfoCallback, Void, Bo
             Utils.SiteLoader sl = new Utils.SiteLoader("https://www.facebook.com/chat/user_info/");
             sl.addCookies(ac.cookies);
             String params = ac.getFormParams()+"&ids[]="+ID;
-            Log.d("params",params);
             sl.post(params);
             sl.load();
             ac.cookies = sl.getCookiesManager();
-            Log.d("data", sl.getData());
 
-            //TODO utils function which checks some stuff/errors
-            JSONObject obj = new JSONObject(sl.getData().substring(9)).getJSONObject("payload").getJSONObject("profiles").getJSONObject(ID);
+            String json = Utils.checkAndFormatResponse(sl.getData());
+            if(json == null){
+                //TODO tryAgain
+            }else if(json.equals("NotLoggedIn")){
+                //TODO RELOG
+            }
+
+            JSONObject obj = new JSONObject(json).getJSONObject("payload").getJSONObject("profiles").getJSONObject(ID);
             userInfo.name = obj.getString("name");
             userInfo.firstName = obj.getString("firstName");
             userInfo.vanity = obj.getString("vanity");
