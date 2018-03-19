@@ -10,7 +10,10 @@ import com.etiaro.facebook.Utils;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.net.HttpCookie;
+import java.net.URI;
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by jakub on 17.03.18.
@@ -29,7 +32,7 @@ public class GetUserInfo extends AsyncTask<Interfaces.UserInfoCallback, Void, Bo
     }
 
 
-    public Interfaces.UserInfo getUserInfo(){
+    public Interfaces.UserInfo getUserInfo(){ // sync Call
         try {
             Utils.SiteLoader sl = new Utils.SiteLoader("https://www.facebook.com/chat/user_info/");
             sl.addCookies(ac.cookies);
@@ -40,8 +43,10 @@ public class GetUserInfo extends AsyncTask<Interfaces.UserInfoCallback, Void, Bo
 
             String json = Utils.checkAndFormatResponse(sl.getData());
             if(json == null){
+                Log.e("talkie", "failedLoadData");
                 //TODO tryAgain
             }else if(json.equals("NotLoggedIn")){
+                Log.e("talkie", "NotLoggedIn");
                 //TODO RELOG
             }
 
@@ -69,10 +74,10 @@ public class GetUserInfo extends AsyncTask<Interfaces.UserInfoCallback, Void, Bo
     }
 
     @Override
-    protected Boolean doInBackground(Interfaces.UserInfoCallback... userInfoCallbacks) {
+    protected Boolean doInBackground(Interfaces.UserInfoCallback... userInfoCallbacks) { //async call
         callbacks = userInfoCallbacks;
-        if(callbacks.length <= 0)
-            return false;
+        //if(callbacks.length <= 0)
+            //return false;
 
         getUserInfo();
 

@@ -11,6 +11,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.net.CookieManager;
 import java.net.HttpCookie;
 import java.net.URI;
@@ -23,15 +24,16 @@ public class Login extends AsyncTask<Interfaces.LoginCallback, Void, Boolean> {
     private final String mLogin;
     private final String mPassword;
     private Interfaces.LoginCallback[] callbacks;
-    private Account ac;
+    private Account ac = null;
 
     public Login(String email, String password) {
         mLogin = email;
         mPassword = password;
     }
-
+    
     @Override
     protected Boolean doInBackground(Interfaces.LoginCallback... callbacks) {
+
         if(callbacks.length <= 0)
             return false;
         this.callbacks = callbacks;

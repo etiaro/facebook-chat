@@ -122,11 +122,10 @@ public class Utils {
             response = response.substring(response.indexOf("{"));
         try{
             String er = new JSONObject(response).getString("error");
+            if(er.equals("1357001"))
+                return "NotLoggedIn";
             if(er != null)
                 return null;
-            if(er.equals("1357001")){
-                return "NotLoggedIn";
-            }
         }catch (Exception e){
             return response;
         }

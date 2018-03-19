@@ -12,7 +12,9 @@ import java.io.IOException;
 import java.net.CookieManager;
 import java.net.HttpCookie;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.regex.Matcher;
@@ -31,8 +33,9 @@ public class Account {
         cookies = cm;
 
         Utils.SiteLoader sl = new Utils.SiteLoader("https://www.facebook.com");
-        sl.addCookies(cm);
+        sl.addCookies(cookies);
         sl.load();
+        cookies = sl.getCookiesManager();
 
         revision = Utils.cutString(sl.getData(), "revision\":",",");
         fb_dtsg = Utils.cutString(sl.getData(), "fb_dtsg", "NONE").substring(11, 36);
@@ -41,6 +44,7 @@ public class Account {
         for (int i = 0; i < fb_dtsg.length(); i++)
             ttstamp += fb_dtsg.charAt(i);
         List<HttpCookie> list = cookies.getCookieStore().get(URI.create("https://www.facebook.com"));
+
         this.userID = null;
         for(HttpCookie cookie : list)
             if(cookie.getName().equals("c_user")) {
@@ -50,7 +54,7 @@ public class Account {
 
         clientID = Integer.toHexString(new Random().nextInt(2147483647) | 0);
     }
-    public Account(String JSON) throws JSONException {
+    public Account(String JSON) throws JSONException{
         JSONObject obj = new JSONObject(JSON);
         login = obj.getString("login");
         password = obj.getString("password");
@@ -63,6 +67,7 @@ public class Account {
         clientID = obj.getString("clientID");
         loggedIn = obj.getBoolean("loggedIn");
         reqCounter = obj.getInt("reqCounter");
+        info = new Interfaces.UserInfo();
         info.firstName = obj.getJSONObject("info").getString("firstName");
         info.name = obj.getJSONObject("info").getString("name");
         info.gender = obj.getJSONObject("info").getString("gender");
@@ -71,10 +76,22 @@ public class Account {
         info.type = obj.getJSONObject("info").getString("type");
         info.vanity = obj.getJSONObject("info").getString("vanity");
 
-        //TODO cookies parsing
+        //cookies parsing
+        cookies = new CookieManager();
+        Iterator<String> itURI = obj.getJSONObject("cookies").keys();
+        while (itURI.hasNext()){
+            String uri = itURI.next();
+            JSONObject arr = obj.getJSONObject("cookies").getJSONObject(uri);
+            Iterator<String> itCookie = arr.keys();
+            while(itCookie.hasNext()){
+                String key = itCookie.next();
+                String val = arr.getString(key);
+                cookies.getCookieStore().add(URI.create(uri), HttpCookie.parse(key+"="+val+"; Path=/; Domain="+URI.create(uri).getAuthority()).get(0));
+            }
+        }
     }
 
-    public void loadUserdata(){
+    public void loadUserdata() throws IOException {
         info = new GetUserInfo(this, this.userID).getUserInfo();
         firstName = info.firstName;
         name = info.name;
@@ -108,7 +125,18 @@ public class Account {
                     .put("gender", info.gender).put("isFriend", info.isFriend)
                     .put("profileUrl", info.profileUrl).put("type", info.type)
                     .put("vanity",info.vanity));
-            obj.put("cookies", new JSONObject()); //TODO cookies stringify
+
+            //Stringify cookies
+            JSONObject c = new JSONObject();
+            for(URI uri : cookies.getCookieStore().getURIs()){
+                JSONObject arr = new JSONObject();
+                for(HttpCookie cookie : cookies.getCookieStore().get(uri)){
+                    arr.put(cookie.getName(), cookie.getValue());
+                }
+                c.put(uri.toString(), arr);
+            }
+            obj.put("cookies", c);
+
         } catch (JSONException e) {
             Log.e("talkie", "Critical error while saving account: "+e.toString());
         }
