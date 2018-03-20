@@ -112,7 +112,7 @@ public class Account {
                 "&fb_dtsg="+fb_dtsg+
                 "&jazoest="+ttstamp;
     }
-    public String toString(){//TODO stringify account
+    public String toString(){
         JSONObject obj = new JSONObject();
         try {
             obj.put("login", login).put("password", password)

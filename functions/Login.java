@@ -59,7 +59,7 @@ public class Login extends AsyncTask<Interfaces.LoginCallback, Void, Boolean> {
             String params = "lsd="+Utils.cutString(sl.getData(),"\\[\"LSD\",\\[\\],\\{\"token\":\"", "\"\\}")+
                     "&lgndim={\"w\":1440,\"h\":900,\"aw\":1440,\"ah\":834,\"c\":24}"+
                     "&email="+ mLogin +"&pass="+ mPassword +"&default_persistent=0"+
-                    "&lgnrnd="+Utils.cutString(sl.getData(), "lgnrnd\" value=\"", "\"")+//TODO this split alike fb_dtsg
+                    "&lgnrnd="+Utils.cutString(sl.getData(), "lgnrnd", "NONE").substring(11, 22)+
                     "&locale=en_US&timezone=240"+
                     "&lgnjs="+(int)(Calendar.getInstance().getTimeInMillis()/1000);
             sl2.post(params);

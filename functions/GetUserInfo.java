@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.net.HttpCookie;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -25,6 +26,8 @@ public class GetUserInfo extends AsyncTask<Interfaces.UserInfoCallback, Void, Bo
     Account ac;
     String ID;
     boolean success = true;
+    boolean isAsync = false;
+    int attepts = 0;
 
     public GetUserInfo(Account ac, String ID){
         this.ac = ac;
@@ -33,6 +36,10 @@ public class GetUserInfo extends AsyncTask<Interfaces.UserInfoCallback, Void, Bo
 
 
     public Interfaces.UserInfo getUserInfo(){ // sync Call
+        if(attepts++ > 5) {
+            success = false;
+            return null;
+        }
         try {
             Utils.SiteLoader sl = new Utils.SiteLoader("https://www.facebook.com/chat/user_info/");
             sl.addCookies(ac.cookies);
@@ -43,8 +50,12 @@ public class GetUserInfo extends AsyncTask<Interfaces.UserInfoCallback, Void, Bo
 
             String json = Utils.checkAndFormatResponse(sl.getData());
             if(json == null){
-                Log.e("talkie", "failedLoadData");
-                //TODO tryAgain
+                Log.e("talkie", "failed GetUserInfo");
+                if(isAsync){
+                    TimeUnit.SECONDS.sleep(new Random().nextLong()*5);
+                    getUserInfo();
+                }
+                return null;
             }else if(json.equals("NotLoggedIn")){
                 Log.e("talkie", "NotLoggedIn");
                 //TODO RELOG
@@ -76,8 +87,9 @@ public class GetUserInfo extends AsyncTask<Interfaces.UserInfoCallback, Void, Bo
     @Override
     protected Boolean doInBackground(Interfaces.UserInfoCallback... userInfoCallbacks) { //async call
         callbacks = userInfoCallbacks;
-        //if(callbacks.length <= 0)
-            //return false;
+        if(callbacks.length <= 0)
+            return false;
+        isAsync = true;
 
         getUserInfo();
 
