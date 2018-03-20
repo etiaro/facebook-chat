@@ -58,6 +58,8 @@ public class GetUserInfo extends AsyncTask<Interfaces.UserInfoCallback, Void, Bo
                 return null;
             }else if(json.equals("NotLoggedIn")){
                 Log.e("talkie", "NotLoggedIn");
+                success = false;
+                return null;
                 //TODO RELOG
             }
 
