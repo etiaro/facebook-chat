@@ -26,10 +26,11 @@ public class GetThreadList extends AsyncTask<Interfaces.ThreadListCallback, Void
     int attepts = 0;
 
     Account ac;
-    int timestamp, limit;
+    float timestamp;
+    int limit;
     String[] tags;
 
-    public GetThreadList(Account ac, int limit, int timestamp, String[] tags){
+    public GetThreadList(Account ac, int limit, float timestamp, String[] tags){
         this.ac = ac;
         this.timestamp = timestamp;
         this.limit = limit;
@@ -51,14 +52,14 @@ public class GetThreadList extends AsyncTask<Interfaces.ThreadListCallback, Void
                     new JSONObject().put("doc_id", "1349387578499440")
                     .put("query_params",new JSONObject()
                             .put("limit",limit+(timestamp>0?1:0))
-                            //.put("before", timestamp>0?timestamp:null) Not working???
+                            .put("before", timestamp>0?timestamp:null)
                             .put("tags", new JSONArray(tags))
                             .put("includeDeliveryReceipts", true)
                             .put("includeSeqID", false)));
-            Log.d("params", params);
             sl.post(params);
             sl.load();
             ac.cookies = sl.getCookiesManager();
+
 
             String json = Utils.checkAndFormatResponse(sl.getData());
             if(json == null){
