@@ -4,7 +4,6 @@ import android.util.Log;
 
 import com.etiaro.facebook.functions.GetUserInfo;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -12,13 +11,10 @@ import java.io.IOException;
 import java.net.CookieManager;
 import java.net.HttpCookie;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 public class Account {
@@ -144,3 +140,5 @@ public class Account {
         return obj.toString();
     }
 }
+
+//TODO add thread list

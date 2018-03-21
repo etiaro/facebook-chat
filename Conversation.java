@@ -1,6 +1,6 @@
-package com.etiaro.facebook.functions;
+package com.etiaro.facebook;
 
-import android.util.Log;
+import com.etiaro.facebook.Message;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -13,7 +13,7 @@ import java.util.HashMap;
  * Created by jakub on 21.03.18.
  */
 
-public class Thread {
+public class Conversation {
     public ArrayList<Message> messages = new ArrayList<>();
     public String thread_key, name, image, folder, cannot_reply_reason, emoji, outgoing_bubble_color;
     public int unread_count, messages_count, ephemeral_ttl_mode;
@@ -22,16 +22,21 @@ public class Thread {
     public Long updated_time_precise, mute_until;
     public HashMap<String, String> nicknames = new HashMap<>();
 
-    Thread(JSONObject json) throws JSONException {
-        if (json.getJSONObject("thread_key").getString("thread_fbid") != null) {
+    public Conversation(JSONObject json) throws JSONException {
+        if (json.getJSONObject("thread_key").getString("thread_fbid") != "null") {
             thread_key = json.getJSONObject("thread_key").getString("thread_fbid");
             isGroup = true;
-        } else if (json.getJSONObject("thread_key").getString("other_user_id") != null) {
+        } else if (json.getJSONObject("thread_key").getString("other_user_id") != "null") {
             thread_key = json.getJSONObject("thread_key").getString("other_user_id");
             isGroup = false;
         }
-        for (int i = 0; i < json.getJSONObject("last_message").getJSONArray("nodes").length(); i++)
-            messages.add(new Message(json.getJSONObject("last_message").getJSONArray("nodes").getJSONObject(i)));
+       if(json.has("messages"))
+            for (int i = 0; i < json.getJSONObject("messages").getJSONArray("nodes").length(); i++)
+                messages.add(new Message(json.getJSONObject("messages").getJSONArray("nodes").getJSONObject(i)));
+        else
+            for (int i = 0; i < json.getJSONObject("last_message").getJSONArray("nodes").length(); i++)
+                messages.add(new Message(json.getJSONObject("last_message").getJSONArray("nodes").getJSONObject(i)));
+
 
         name = json.getString("name");
         unread_count = json.getInt("unread_count");
@@ -46,7 +51,8 @@ public class Thread {
         thread_queue_enabled = json.getBoolean("thread_queue_enabled");
         folder = json.getString("folder");
         has_viewer_archived = json.getBoolean("has_viewer_archived");
-        is_page_follow_up = json.getBoolean("is_page_follow_up");
+        if(json.has("is_page_follow_up"))
+            is_page_follow_up = json.getBoolean("is_page_follow_up");
         cannot_reply_reason = json.getString("cannot_reply_reason");
         ephemeral_ttl_mode = json.getInt("ephemeral_ttl_mode"); //not shure what that means
         if(json.get("customization_info") instanceof JSONObject) {
@@ -59,6 +65,9 @@ public class Thread {
         }
     }
 }
+//TODO getthreadHistory variables
+//TODO more variables
+//TODO add from which account
     /*{
         "thread_admins":[],
         "approval_mode":null,
