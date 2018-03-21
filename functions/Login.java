@@ -4,14 +4,12 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.etiaro.facebook.Account;
-import com.etiaro.facebook.Interfaces;
 import com.etiaro.facebook.Utils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.net.CookieManager;
 import java.net.HttpCookie;
 import java.net.URI;
@@ -20,10 +18,10 @@ import java.util.Calendar;
 
 
 
-public class Login extends AsyncTask<Interfaces.LoginCallback, Void, Boolean> {
+public class Login extends AsyncTask<Login.LoginCallback, Void, Boolean> {
     private final String mLogin;
     private final String mPassword;
-    private Interfaces.LoginCallback[] callbacks;
+    private LoginCallback[] callbacks;
     private Account ac = null;
 
     public Login(String email, String password) {
@@ -32,7 +30,7 @@ public class Login extends AsyncTask<Interfaces.LoginCallback, Void, Boolean> {
     }
     
     @Override
-    protected Boolean doInBackground(Interfaces.LoginCallback... callbacks) {
+    protected Boolean doInBackground(LoginCallback... callbacks) {
 
         if(callbacks.length <= 0)
             return false;
@@ -146,11 +144,11 @@ public class Login extends AsyncTask<Interfaces.LoginCallback, Void, Boolean> {
     protected void onPostExecute(final Boolean success) {
 
         if (success) {
-            for (Interfaces.LoginCallback c : callbacks) {
+            for (LoginCallback c : callbacks) {
                 c.success(ac);
             }
         } else {
-            for (Interfaces.LoginCallback c : callbacks) {
+            for (LoginCallback c : callbacks) {
                 c.fail();
             }
         }
@@ -158,8 +156,15 @@ public class Login extends AsyncTask<Interfaces.LoginCallback, Void, Boolean> {
 
     @Override
     protected void onCancelled() {
-        for (Interfaces.LoginCallback c : callbacks) {
+        for (LoginCallback c : callbacks) {
             c.cancelled();
         }
+    }
+
+
+    public interface LoginCallback{
+        void success(Account ac);
+        void fail();
+        void cancelled();
     }
 }

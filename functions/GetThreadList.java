@@ -2,15 +2,14 @@ package com.etiaro.facebook.functions;
 
 import android.os.AsyncTask;
 import android.util.Log;
-import android.widget.Switch;
 
 import com.etiaro.facebook.Account;
-import com.etiaro.facebook.Interfaces;
 import com.etiaro.facebook.Utils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -18,9 +17,9 @@ import java.util.concurrent.TimeUnit;
  * Created by jakub on 20.03.18.
  */
 
-public class GetThreadList extends AsyncTask<Interfaces.ThreadListCallback, Void, Boolean> {
-    Interfaces.ThreadListCallback[] callbacks;
-    JSONArray threadList;
+public class GetThreadList extends AsyncTask<GetThreadList.ThreadListCallback, Void, Boolean> {
+    ThreadListCallback[] callbacks;
+    ArrayList<Thread> threadList = new ArrayList<>();
     boolean success = true;
     boolean isAsync = false;
     int attepts = 0;
@@ -38,7 +37,7 @@ public class GetThreadList extends AsyncTask<Interfaces.ThreadListCallback, Void
     }
 
 
-    public JSONArray getThreadList(){ // sync Call
+    public ArrayList<Thread> getThreadList(){ // sync Call
         if(attepts++ > 5) {
             success = false;
             return null;
@@ -76,8 +75,12 @@ public class GetThreadList extends AsyncTask<Interfaces.ThreadListCallback, Void
                 //TODO RELOG
             }
 
-            threadList = new JSONObject(json).getJSONObject("o0").getJSONObject("data")
+            JSONArray threads = new JSONObject(json).getJSONObject("o0").getJSONObject("data")
                 .getJSONObject("viewer").getJSONObject("message_threads").getJSONArray("nodes");
+            for(int i = 0; i < threads.length(); i++){
+                threadList.add(new Thread(threads.getJSONObject(i)));
+            }
+
         } catch (Exception e) {
             Log.e("threadList", e.toString());
             success = false;
@@ -86,7 +89,7 @@ public class GetThreadList extends AsyncTask<Interfaces.ThreadListCallback, Void
     }
 
     @Override
-    protected Boolean doInBackground(Interfaces.ThreadListCallback... userInfoCallbacks) { //async call
+    protected Boolean doInBackground(ThreadListCallback... userInfoCallbacks) { //async call
         callbacks = userInfoCallbacks;
         //if(callbacks.length <= 0)
             //return false;
@@ -100,11 +103,11 @@ public class GetThreadList extends AsyncTask<Interfaces.ThreadListCallback, Void
     @Override
     protected void onPostExecute(final Boolean success) {
         if (success) {
-            for (Interfaces.ThreadListCallback c : callbacks) {
+            for (ThreadListCallback c : callbacks) {
                 c.success(threadList);
             }
         } else {
-            for (Interfaces.ThreadListCallback c : callbacks) {
+            for (ThreadListCallback c : callbacks) {
                 c.fail();
             }
         }
@@ -112,8 +115,14 @@ public class GetThreadList extends AsyncTask<Interfaces.ThreadListCallback, Void
 
     @Override
     protected void onCancelled() {
-        for (Interfaces.ThreadListCallback c : callbacks) {
+        for (ThreadListCallback c : callbacks) {
             c.cancelled();
         }
+    }
+
+    public interface ThreadListCallback{
+        void success(ArrayList<Thread> list);
+        void fail();
+        void cancelled();
     }
 }

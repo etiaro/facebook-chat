@@ -4,15 +4,10 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.etiaro.facebook.Account;
-import com.etiaro.facebook.Interfaces;
 import com.etiaro.facebook.Utils;
 
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.net.HttpCookie;
-import java.net.URI;
-import java.util.HashMap;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -20,9 +15,9 @@ import java.util.concurrent.TimeUnit;
  * Created by jakub on 17.03.18.
  */
 
-public class GetUserInfo extends AsyncTask<Interfaces.UserInfoCallback, Void, Boolean> {
-    Interfaces.UserInfoCallback[] callbacks;
-    Interfaces.UserInfo userInfo = new Interfaces.UserInfo();
+public class GetUserInfo extends AsyncTask<GetUserInfo.UserInfoCallback, Void, Boolean> {
+    UserInfoCallback[] callbacks;
+    UserInfo userInfo = new UserInfo();
     Account ac;
     String ID;
     boolean success = true;
@@ -35,7 +30,7 @@ public class GetUserInfo extends AsyncTask<Interfaces.UserInfoCallback, Void, Bo
     }
 
 
-    public Interfaces.UserInfo getUserInfo(){ // sync Call
+    public UserInfo getUserInfo(){ // sync Call
         if(attepts++ > 5) {
             success = false;
             return null;
@@ -87,7 +82,7 @@ public class GetUserInfo extends AsyncTask<Interfaces.UserInfoCallback, Void, Bo
     }
 
     @Override
-    protected Boolean doInBackground(Interfaces.UserInfoCallback... userInfoCallbacks) { //async call
+    protected Boolean doInBackground(UserInfoCallback... userInfoCallbacks) { //async call
         callbacks = userInfoCallbacks;
         if(callbacks.length <= 0)
             return false;
@@ -101,11 +96,11 @@ public class GetUserInfo extends AsyncTask<Interfaces.UserInfoCallback, Void, Bo
     @Override
     protected void onPostExecute(final Boolean success) {
         if (success) {
-            for (Interfaces.UserInfoCallback c : callbacks) {
+            for (UserInfoCallback c : callbacks) {
                 c.success(userInfo);
             }
         } else {
-            for (Interfaces.UserInfoCallback c : callbacks) {
+            for (UserInfoCallback c : callbacks) {
                 c.fail();
             }
         }
@@ -113,8 +108,19 @@ public class GetUserInfo extends AsyncTask<Interfaces.UserInfoCallback, Void, Bo
 
     @Override
     protected void onCancelled() {
-        for (Interfaces.UserInfoCallback c : callbacks) {
+        for (UserInfoCallback c : callbacks) {
             c.cancelled();
         }
+    }
+
+
+    public static class UserInfo{
+        public String name, firstName, vanity, thumbSrc, profileUrl, gender, type;
+        public boolean isFriend;
+    }
+    public interface UserInfoCallback{
+        void success(UserInfo info);
+        void fail();
+        void cancelled();
     }
 }

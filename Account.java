@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
 public class Account {
     private String login, password, revision, fb_dtsg, ttstamp, firstName, name, userID, clientID;
     private boolean loggedIn = false;
-    private Interfaces.UserInfo info;
+    private GetUserInfo.UserInfo info;
     private int reqCounter = 0;
     public CookieManager cookies;
     public Account(String l, String pass, CookieManager cm) throws IOException {
@@ -67,7 +67,7 @@ public class Account {
         clientID = obj.getString("clientID");
         loggedIn = obj.getBoolean("loggedIn");
         reqCounter = obj.getInt("reqCounter");
-        info = new Interfaces.UserInfo();
+        info = new GetUserInfo.UserInfo();
         info.firstName = obj.getJSONObject("info").getString("firstName");
         info.name = obj.getJSONObject("info").getString("name");
         info.gender = obj.getJSONObject("info").getString("gender");
