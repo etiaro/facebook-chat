@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.etiaro.facebook.functions.GetUserInfo;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -22,6 +23,7 @@ public class Account {
     private boolean loggedIn = false;
     private GetUserInfo.UserInfo info;
     private int reqCounter = 0;
+    public ArrayList<Conversation> converstionsList = new ArrayList<>();
     public CookieManager cookies;
     public Account(String l, String pass, CookieManager cm) throws IOException {
         login = l;
@@ -132,6 +134,11 @@ public class Account {
                 c.put(uri.toString(), arr);
             }
             obj.put("cookies", c);
+
+            //conversations
+            JSONArray arr = new JSONArray();
+            for(Conversation conv : converstionsList)
+                arr.put(conv.toString());
 
         } catch (JSONException e) {
             Log.e("talkie", "Critical error while saving account: "+e.toString());

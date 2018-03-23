@@ -37,8 +37,6 @@ public class Conversation {
             for (int i = 0; i < json.getJSONObject("last_message").getJSONArray("nodes").length(); i++)
                 messages.add(new Message(json.getJSONObject("last_message").getJSONArray("nodes").getJSONObject(i)));
 
-
-        name = json.getString("name");
         unread_count = json.getInt("unread_count");
         messages_count = json.getInt("messages_count");
         image = json.getString("image");
@@ -63,6 +61,11 @@ public class Conversation {
                 nicknames.put(customizations.getJSONObject(i).getString("participant_id"),
                         customizations.getJSONObject(i).getString("nickname"));
         }
+
+        name = json.getString("name");
+    }
+    public String toString(){
+        return "";
     }
 }
 //TODO getthreadHistory variables
