@@ -9,33 +9,42 @@ import org.json.JSONObject;
  */
 
 public class Message {
-    public String snippet, senderID;
-    public boolean isSenderUser;
+    public String text, senderID, __typename, message_id, offline_threading_id, sender_email;
+    public int ttl;
     public Long timestamp_precise;
+    public boolean unread, is_sponsored;
     Message(JSONObject json) throws JSONException {
-        snippet = json.getString("snippet");
-        isSenderUser = true; //TODO not-user
-        if(json.getJSONObject("message_sender").has("messaging_actor"))
-            senderID = json.getJSONObject("message_sender").getJSONObject("messaging_actor").getString("id");
-        timestamp_precise = Long.valueOf(json.getString("timestamp_precise"));
+        update(json);
     }
+	
+	public void update(JSONObject json){
+		if(!json.has("message_id")) {
+            text = json.getString("snippet");
+            senderID = json.getJSONObject("message_sender").getJSONObject("messaging_actor").getString("id");
+        }else{
+            __typename = json.getString("__typename");
+            message_id = json.getString("message_id");
+            offline_threading_id = json.getString("offline_threading_id");  //???
+            senderID = json.getJSONObject("message_sender").getString("id");
+            sender_email = json.getJSONObject("message_sender").getString("email");
+            ttl = json.getInt("ttl");
+            unread = json.getBoolean("unread");
+            is_sponsored = json.getBoolean("is_sponsored");
+            text = json.getJSONObject("message").getString("text");
+        }
+        timestamp_precise = Long.valueOf(json.getString("timestamp_precise"));
+	}
+	
+	public String toString(){
+		JSONObject obj = new JSONObject().put("text", text).put("senderID", senderID).put("__typename", __typename).put("message_id", message_id).put("offline_threading_id", offline_threading_id).put("sender_email", sender_email).put("ttl", ttl).put("unread", unread).put("is_sponsored", is_sponsored).put("timestamp_precise", timestamp_precise);
+		return obj.toString();
+	}
 }
 
 //TODO more args(threadhistory) and not too much IFs statements
 
 
 /*{
-    "__typename":"UserMessage",
-    "message_id":"mid.$cAAAAB37oytpoezPdX1iSe6Ul01HF",
-    "offline_threading_id":"6382299571171840453",
-    "message_sender":{
-        "id":"100006952652301",
-        "email":"100006952652301\u0040facebook.com"
-    },
-    "ttl":0,
-    "timestamp_precise":"1521658795359",
-    "unread":false,
-    "is_sponsored":false,
     "commerce_message_type":null,
     "customizations":[],
     "tags_list":[
@@ -46,13 +55,9 @@ public class Message {
     "platform_xmd_encoded":null,
     "message_source_data":null,
     "montage_reply_data":null,
-    "message_reactions":[],
-    "message":{
-        "text":"\ud83d\udd2b",
-        "ranges":[]
-    },
+    TODO "message_reactions":[],          <-------
+    "message":{"ranges":[]},
     "extensible_attachment":null,
     "sticker":null,
     "blob_attachments":[],
-    "snippet":"\ud83d\udd2b"
 }*/

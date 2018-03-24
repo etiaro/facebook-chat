@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.etiaro.facebook.functions.GetUserInfo;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
