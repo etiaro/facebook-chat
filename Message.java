@@ -14,7 +14,11 @@ public class Message {
     public Long timestamp_precise;
     public boolean unread, is_sponsored;
     Message(JSONObject json) throws JSONException {
-        if(!json.has("message_id")) {
+        update(json);
+    }
+	
+	public void update(JSONObject json){
+		if(!json.has("message_id")) {
             text = json.getString("snippet");
             senderID = json.getJSONObject("message_sender").getJSONObject("messaging_actor").getString("id");
         }else{
@@ -29,7 +33,12 @@ public class Message {
             text = json.getJSONObject("message").getString("text");
         }
         timestamp_precise = Long.valueOf(json.getString("timestamp_precise"));
-    }
+	}
+	
+	public String toString(){
+		JSONObject obj = new JSONObject().put("text", text).put("senderID", senderID).put("__typename", __typename).put("message_id", message_id).put("offline_threading_id", offline_threading_id).put("sender_email", sender_email).put("ttl", ttl).put("unread", unread).put("is_sponsored", is_sponsored).put("timestamp_precise", timestamp_precise);
+		return obj.toString();
+	}
 }
 
 //TODO more args(threadhistory) and not too much IFs statements

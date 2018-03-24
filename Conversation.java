@@ -23,7 +23,11 @@ public class Conversation {
     public HashMap<String, String> nicknames = new HashMap<>();
 
     public Conversation(JSONObject json) throws JSONException {
-        if (json.getJSONObject("thread_key").getString("thread_fbid") != "null") {
+        update(json);
+    }
+	
+	public void update(JSONObject json){
+		if (json.getJSONObject("thread_key").getString("thread_fbid") != "null") {
             thread_key = json.getJSONObject("thread_key").getString("thread_fbid");
             isGroup = true;
         } else if (json.getJSONObject("thread_key").getString("other_user_id") != "null") {
@@ -63,9 +67,25 @@ public class Conversation {
         }
 
         name = json.getString("name");
-    }
+	}
+	
     public String toString(){
-        return "";
+		JSONObject obj = new JSONObject().put("thread_key", thread_key).put("isGroup", isGroup).put("unread_count", unread_count).put("messages_count", messages_count).put("image", image).put("updated_time_precise", updated_time_precise).put("mute_until", mute_until).put("is_pin_protected", is_pin_protected).put("is_viewer_subscribed", is_viewer_subscribed).put("thread_queue_enabled", thread_queue_enabled).put("folder", folder).put("has_viewer_archived", has_viewer_archived).put("is_page_follow_up", is_page_follow_up).put("cannot_reply_reason", cannot_reply_reason).put("ephemeral_ttl_mode", ephemeral_ttl_mode).put("name", name);
+		
+		JSONArray tmp = new JSONArray()); //Add all messages
+		for(Message m : messages)
+			tmp.put(m.toString);
+		obj.put("messages", new JSONObject().put("nodes", tmp));
+		
+		tmp = new JSONArray(); //Add all customizations
+		for(Map.Entry<String, String> nick : nicknames.entrySet())
+			tmp.put(new JSONObject().put("participant_id", entry.getKey()).put("nickname", entry.getValue());
+		
+		obj.put("customization_info", new JSONObject().put("emoji", emoji).put("outgoing_bubble_color", outgoing_bubble_color).put("participant_customizations", tmp);
+		
+		
+		//TODO test by compare this.toString()& new Conversation(this.toString()).toString();
+        return obj.toString();
     }
 }
 //TODO getthreadHistory variables
