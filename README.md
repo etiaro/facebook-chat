@@ -1,8 +1,8 @@
 # facebook-chat
 Library, made to use facebook chat on android(SDK, java)
 
-Logging in:
-
+## Logging in:
+```java
  Login mAuthTask = new Login(email, password);
  mAuthTask.execute(new Login.LoginCallback(){
         @Override
@@ -20,3 +20,4 @@ Logging in:
             //Handle cancelled
         }
  });
+```
