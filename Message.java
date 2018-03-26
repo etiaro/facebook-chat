@@ -17,7 +17,7 @@ public class Message {
         update(json);
     }
 	
-	public void update(JSONObject json){
+	public void update(JSONObject json) throws JSONException {
 		if(!json.has("message_id")) {
             text = json.getString("snippet");
             senderID = json.getJSONObject("message_sender").getJSONObject("messaging_actor").getString("id");
@@ -34,10 +34,27 @@ public class Message {
         }
         timestamp_precise = Long.valueOf(json.getString("timestamp_precise"));
 	}
-	
+
+	public JSONObject toJSON(){
+        JSONObject obj = null;
+        try {
+            obj = new JSONObject().put("text", text).put("senderID", senderID)
+                    .put("__typename", __typename).put("message_sender", new JSONObject()
+                        .put("sender_email", sender_email).put("id", senderID)
+                        .put("messaging_actor", new JSONObject()
+                            .put("id", senderID)))
+                    .put("message_id", message_id)
+                    .put("offline_threading_id", offline_threading_id).put("ttl", ttl)
+                    .put("unread", unread).put("is_sponsored", is_sponsored)
+                    .put("timestamp_precise", timestamp_precise).put("snippet", text);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return obj;
+    }
+
 	public String toString(){
-		JSONObject obj = new JSONObject().put("text", text).put("senderID", senderID).put("__typename", __typename).put("message_id", message_id).put("offline_threading_id", offline_threading_id).put("sender_email", sender_email).put("ttl", ttl).put("unread", unread).put("is_sponsored", is_sponsored).put("timestamp_precise", timestamp_precise);
-		return obj.toString();
+        return toJSON().toString();
 	}
 }
 

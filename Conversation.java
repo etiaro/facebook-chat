@@ -1,5 +1,7 @@
 package com.etiaro.facebook;
 
+import android.util.Log;
+
 import com.etiaro.facebook.Message;
 
 import org.json.JSONArray;
@@ -8,6 +10,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by jakub on 21.03.18.
@@ -19,15 +22,18 @@ public class Conversation {
     public int unread_count, messages_count, ephemeral_ttl_mode;
     public Boolean isGroup, is_pin_protected, is_viewer_subscribed, thread_queue_enabled, has_viewer_archived,
             is_page_follow_up;
-    public Long updated_time_precise, mute_until;
+    public Long updated_time_precise = 0l, mute_until = 0l;
     public HashMap<String, String> nicknames = new HashMap<>();
 
     public Conversation(JSONObject json) throws JSONException {
         update(json);
     }
 	
-	public void update(JSONObject json){
-		if (json.getJSONObject("thread_key").getString("thread_fbid") != "null") {
+	public void update(JSONObject json) throws JSONException {
+        if(json.get("thread_key") instanceof String) {
+            thread_key = json.getString("thread_key");
+            isGroup = json.getBoolean("isGroup");
+        }else if (json.getJSONObject("thread_key").getString("thread_fbid") != "null") {
             thread_key = json.getJSONObject("thread_key").getString("thread_fbid");
             isGroup = true;
         } else if (json.getJSONObject("thread_key").getString("other_user_id") != "null") {
@@ -68,24 +74,44 @@ public class Conversation {
 
         name = json.getString("name");
 	}
+
+	public JSONObject toJSON(){
+        JSONObject obj = null;
+        try {
+            obj = new JSONObject().put("thread_key", thread_key).put("isGroup", isGroup)
+                .put("unread_count", unread_count).put("messages_count", messages_count)
+                .put("image", image).put("updated_time_precise", updated_time_precise)
+                .put("mute_until", mute_until).put("is_pin_protected", is_pin_protected)
+                .put("is_viewer_subscribed", is_viewer_subscribed).put("thread_queue_enabled", thread_queue_enabled)
+                .put("folder", folder).put("has_viewer_archived", has_viewer_archived)
+                .put("is_page_follow_up", is_page_follow_up).put("cannot_reply_reason", cannot_reply_reason)
+                .put("ephemeral_ttl_mode", ephemeral_ttl_mode).put("name", name);
+
+
+            JSONArray tmp = new JSONArray(); //Add all messages
+            for(Message m : messages)
+                tmp.put(m.toJSON());
+            obj.put("messages", new JSONObject().put("nodes", tmp));
+
+            tmp = new JSONArray(); //Add all customizations
+            for(Map.Entry<String, String> nick : nicknames.entrySet())
+                tmp.put(new JSONObject().put("participant_id", nick.getKey()).put("nickname", nick.getValue()));
+
+            if(emoji != null || outgoing_bubble_color != null || tmp.length() > 0)
+               obj.put("customization_info", (new JSONObject().put("emoji", emoji)
+                    .put("outgoing_bubble_color", outgoing_bubble_color)
+                    .put("participant_customizations", tmp)));
+            else
+                obj.put("customization_info", "null");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        //TODO test by compare this.toString()& new Conversation(this.toString()).toString();
+        return obj;
+    }
 	
     public String toString(){
-		JSONObject obj = new JSONObject().put("thread_key", thread_key).put("isGroup", isGroup).put("unread_count", unread_count).put("messages_count", messages_count).put("image", image).put("updated_time_precise", updated_time_precise).put("mute_until", mute_until).put("is_pin_protected", is_pin_protected).put("is_viewer_subscribed", is_viewer_subscribed).put("thread_queue_enabled", thread_queue_enabled).put("folder", folder).put("has_viewer_archived", has_viewer_archived).put("is_page_follow_up", is_page_follow_up).put("cannot_reply_reason", cannot_reply_reason).put("ephemeral_ttl_mode", ephemeral_ttl_mode).put("name", name);
-		
-		JSONArray tmp = new JSONArray()); //Add all messages
-		for(Message m : messages)
-			tmp.put(m.toString);
-		obj.put("messages", new JSONObject().put("nodes", tmp));
-		
-		tmp = new JSONArray(); //Add all customizations
-		for(Map.Entry<String, String> nick : nicknames.entrySet())
-			tmp.put(new JSONObject().put("participant_id", entry.getKey()).put("nickname", entry.getValue());
-		
-		obj.put("customization_info", new JSONObject().put("emoji", emoji).put("outgoing_bubble_color", outgoing_bubble_color).put("participant_customizations", tmp);
-		
-		
-		//TODO test by compare this.toString()& new Conversation(this.toString()).toString();
-        return obj.toString();
+        return toJSON().toString();
     }
 }
 //TODO getthreadHistory variables
