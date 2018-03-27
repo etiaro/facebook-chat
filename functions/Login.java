@@ -13,6 +13,7 @@ import org.json.JSONObject;
 import java.net.CookieManager;
 import java.net.HttpCookie;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 
@@ -105,12 +106,11 @@ public class Login extends AsyncTask<Login.LoginCallback, Void, Boolean> {
                 json = new JSONObject(sl.getData().replace("for (;;); ", ""));
             }catch (JSONException e){
                 Log.e("JSON", e.toString());
-                //TODO komunikat o problemach, sprobuj w przegladarce
                 return false;
             }
 
             if(!json.getString("t").equals("lb"))
-                return false;//TODO komunikat o problemach, sprobuj w przegladarce
+                return false;
 
             Log.d("REQUEST", "Pull 2");
             params = ac.getFormParams()+"channel=p_"+ ac.getUserID()+
@@ -160,7 +160,6 @@ public class Login extends AsyncTask<Login.LoginCallback, Void, Boolean> {
             c.cancelled();
         }
     }
-
 
     public interface LoginCallback{
         void success(Account ac);

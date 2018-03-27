@@ -3,6 +3,7 @@ package com.etiaro.facebook;
 import android.util.Log;
 
 import com.etiaro.facebook.functions.GetUserInfo;
+import com.etiaro.facebook.functions.Login;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -109,6 +110,7 @@ public class Account {
                 "&fb_dtsg="+fb_dtsg+
                 "&jazoest="+ttstamp;
     }
+
     public String toString(){
         JSONObject obj = new JSONObject();
         try {
@@ -141,5 +143,3 @@ public class Account {
         return obj.toString();
     }
 }
-
-//TODO add thread list

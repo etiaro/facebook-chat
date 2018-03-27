@@ -1,5 +1,6 @@
 package com.etiaro.facebook;
 
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.etiaro.facebook.Message;
@@ -9,6 +10,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,7 +18,7 @@ import java.util.Map;
  * Created by jakub on 21.03.18.
  */
 
-public class Conversation {
+public class Conversation implements Comparator<Conversation>, Comparable<Conversation>{
     public ArrayList<Message> messages = new ArrayList<>();
     public String thread_key, name, image, folder, cannot_reply_reason, emoji, outgoing_bubble_color;
     public int unread_count, messages_count, ephemeral_ttl_mode;
@@ -106,15 +108,23 @@ public class Conversation {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        //TODO test by compare this.toString()& new Conversation(this.toString()).toString();
         return obj;
     }
 	
     public String toString(){
         return toJSON().toString();
     }
+
+    @Override
+    public int compare(Conversation c1, Conversation c2) {
+        return (int)(c2.updated_time_precise - c1.updated_time_precise);
+    }
+
+    @Override
+    public int compareTo(@NonNull Conversation conversation) {
+        return (int)(conversation.updated_time_precise - this.updated_time_precise);
+    }
 }
-//TODO getthreadHistory variables
 //TODO more variables
 //TODO add from which account
     /*{
