@@ -32,16 +32,6 @@ public class Conversation implements Comparator<Conversation>, Comparable<Conver
     }
 	
 	public void update(JSONObject json) throws JSONException {
-        if(json.get("thread_key") instanceof String) {
-            thread_key = json.getString("thread_key");
-            isGroup = json.getBoolean("isGroup");
-        }else if (json.getJSONObject("thread_key").getString("thread_fbid") != "null") {
-            thread_key = json.getJSONObject("thread_key").getString("thread_fbid");
-            isGroup = true;
-        } else if (json.getJSONObject("thread_key").getString("other_user_id") != "null") {
-            thread_key = json.getJSONObject("thread_key").getString("other_user_id");
-            isGroup = false;
-        }
        if(json.has("messages"))
             for (int i = 0; i < json.getJSONObject("messages").getJSONArray("nodes").length(); i++)
                 messages.add(new Message(json.getJSONObject("messages").getJSONArray("nodes").getJSONObject(i)));
@@ -51,7 +41,6 @@ public class Conversation implements Comparator<Conversation>, Comparable<Conver
 
         unread_count = json.getInt("unread_count");
         messages_count = json.getInt("messages_count");
-        image = json.getString("image");
         if(json.getString("updated_time_precise") != "null")
             updated_time_precise = Long.valueOf(json.getString("updated_time_precise"));
         if(json.getString("mute_until") != "null")
@@ -73,8 +62,27 @@ public class Conversation implements Comparator<Conversation>, Comparable<Conver
                 nicknames.put(customizations.getJSONObject(i).getString("participant_id"),
                         customizations.getJSONObject(i).getString("nickname"));
         }
-
-        name = json.getString("name");
+        if(json.get("thread_key") instanceof String) {
+            thread_key = json.getString("thread_key");
+            isGroup = json.getBoolean("isGroup");
+            name = json.getString("name");
+            image = json.getString("image");
+        }else if (json.getJSONObject("thread_key").getString("thread_fbid") != "null") {
+            thread_key = json.getJSONObject("thread_key").getString("thread_fbid");
+            name = json.getString("name");
+            image = json.getJSONObject("image").getString("uri");
+            isGroup = true;
+        } else if (json.getJSONObject("thread_key").getString("other_user_id") != "null") {
+            thread_key = json.getJSONObject("thread_key").getString("other_user_id");
+            if(nicknames.containsKey(thread_key))
+                name = nicknames.get(thread_key);
+            else
+                name = json.getJSONObject("all_participants").getJSONArray("nodes")
+                        .getJSONObject(0).getJSONObject("messaging_actor").getString("name");
+            image = json.getJSONObject("all_participants").getJSONArray("nodes")
+                    .getJSONObject(0).getJSONObject("messaging_actor").getJSONObject("big_image_src").getString("uri");
+            isGroup = false;
+        }
 	}
 
 	public JSONObject toJSON(){
