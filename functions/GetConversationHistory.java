@@ -46,7 +46,6 @@ public class GetConversationHistory extends AsyncTask<GetConversationHistory.Con
             Utils.SiteLoader sl = new Utils.SiteLoader("https://www.facebook.com/api/graphqlbatch/");
             sl.addCookies(ac.cookies);
 
-            Log.d("threadID", threadID);
             String params = ac.getFormParams()+"&queries="+new JSONObject().put("o0",
                     new JSONObject().put("doc_id", "1527774147243246")
                             .put("query_params",new JSONObject()
@@ -75,12 +74,9 @@ public class GetConversationHistory extends AsyncTask<GetConversationHistory.Con
                 //TODO RELOG
             }
 
-            Log.d("json", json);
             JSONObject threads = new JSONObject(json).getJSONObject("o0").getJSONObject("data")
                     .getJSONObject("message_thread");
             conversation = new Conversation(threads);
-
-            //conversation = new Conversation(threads);
 
         } catch (Exception e) {
             Log.e("threadHistory", e.toString());

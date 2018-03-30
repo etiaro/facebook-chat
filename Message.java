@@ -30,7 +30,7 @@ public class Message {
             ttl = json.getInt("ttl");
             unread = json.getBoolean("unread");
             is_sponsored = json.getBoolean("is_sponsored");
-            text = json.getJSONObject("message").getString("text");
+            text = json.getString("snippet");//json.getJSONObject("message").getString("text");
         }
         timestamp_precise = Long.valueOf(json.getString("timestamp_precise"));
 	}
@@ -40,7 +40,7 @@ public class Message {
         try {
             obj = new JSONObject().put("text", text).put("senderID", senderID)
                     .put("__typename", __typename).put("message_sender", new JSONObject()
-                        .put("sender_email", sender_email).put("id", senderID)
+                        .put("email", sender_email).put("id", senderID)
                         .put("messaging_actor", new JSONObject()
                             .put("id", senderID)))
                     .put("message_id", message_id)

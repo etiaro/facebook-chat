@@ -1,9 +1,6 @@
 package com.etiaro.facebook;
 
 import android.support.annotation.NonNull;
-import android.util.Log;
-
-import com.etiaro.facebook.Message;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -12,6 +9,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -19,8 +17,8 @@ import java.util.Map;
  */
 
 public class Conversation implements Comparator<Conversation>, Comparable<Conversation>{
-    public ArrayList<Message> messages = new ArrayList<>();
-    public String thread_key, name, image, folder, cannot_reply_reason, emoji, outgoing_bubble_color;
+    public LinkedHashMap<String, Message> messages = new LinkedHashMap<>();
+    public String thread_key, name, image, folder, cannot_reply_reason, emoji, outgoing_bubble_color, snippet;
     public int unread_count, messages_count, ephemeral_ttl_mode;
     public Boolean isGroup, is_pin_protected, is_viewer_subscribed, thread_queue_enabled, has_viewer_archived,
             is_page_follow_up;
@@ -31,13 +29,15 @@ public class Conversation implements Comparator<Conversation>, Comparable<Conver
         update(json);
     }
 	
-	public void update(JSONObject json) throws JSONException {
-       if(json.has("messages"))
-            for (int i = 0; i < json.getJSONObject("messages").getJSONArray("nodes").length(); i++)
-                messages.add(new Message(json.getJSONObject("messages").getJSONArray("nodes").getJSONObject(i)));
-        else
-            for (int i = 0; i < json.getJSONObject("last_message").getJSONArray("nodes").length(); i++)
-                messages.add(new Message(json.getJSONObject("last_message").getJSONArray("nodes").getJSONObject(i)));
+    public void update(JSONObject json) throws JSONException {
+        if(json.has("messages")) {
+           JSONArray msgs = json.getJSONObject("messages").getJSONArray("nodes");
+            for (int i = 0; i < msgs.length(); i++) {
+                Message msg = new Message(msgs.getJSONObject(i));
+                messages.put(msg.message_id, msg);
+            }
+        }
+        snippet = json.getJSONObject("last_message").getJSONArray("nodes").getJSONObject(0).getString("snippet");
 
         unread_count = json.getInt("unread_count");
         messages_count = json.getInt("messages_count");
@@ -65,8 +65,10 @@ public class Conversation implements Comparator<Conversation>, Comparable<Conver
         if(json.get("thread_key") instanceof String) {
             thread_key = json.getString("thread_key");
             isGroup = json.getBoolean("isGroup");
-            name = json.getString("name");
-            image = json.getString("image");
+            if(json.has("name"))
+                name = json.getString("name");
+            if(json.has("image"))
+                image = json.getString("image");
         }else if (json.getJSONObject("thread_key").getString("thread_fbid") != "null") {
             thread_key = json.getJSONObject("thread_key").getString("thread_fbid");
             name = json.getString("name");
@@ -76,11 +78,14 @@ public class Conversation implements Comparator<Conversation>, Comparable<Conver
             thread_key = json.getJSONObject("thread_key").getString("other_user_id");
             if(nicknames.containsKey(thread_key))
                 name = nicknames.get(thread_key);
-            else
+            else if(json.getJSONObject("all_participants").getJSONArray("nodes")
+                    .getJSONObject(0).getJSONObject("messaging_actor").has("name"))
                 name = json.getJSONObject("all_participants").getJSONArray("nodes")
                         .getJSONObject(0).getJSONObject("messaging_actor").getString("name");
-            image = json.getJSONObject("all_participants").getJSONArray("nodes")
-                    .getJSONObject(0).getJSONObject("messaging_actor").getJSONObject("big_image_src").getString("uri");
+            if(json.getJSONObject("all_participants").getJSONArray("nodes")
+                    .getJSONObject(0).getJSONObject("messaging_actor").has("big_image_src"))
+                image = json.getJSONObject("all_participants").getJSONArray("nodes")
+                        .getJSONObject(0).getJSONObject("messaging_actor").getJSONObject("big_image_src").getString("uri");
             isGroup = false;
         }
 	}
@@ -95,12 +100,13 @@ public class Conversation implements Comparator<Conversation>, Comparable<Conver
                 .put("is_viewer_subscribed", is_viewer_subscribed).put("thread_queue_enabled", thread_queue_enabled)
                 .put("folder", folder).put("has_viewer_archived", has_viewer_archived)
                 .put("is_page_follow_up", is_page_follow_up).put("cannot_reply_reason", cannot_reply_reason)
-                .put("ephemeral_ttl_mode", ephemeral_ttl_mode).put("name", name);
+                .put("ephemeral_ttl_mode", ephemeral_ttl_mode).put("name", name).put("last_message", new JSONObject()
+                    .put("nodes", new JSONArray().put(new JSONObject().put("snippet", snippet))));
 
 
             JSONArray tmp = new JSONArray(); //Add all messages
-            for(Message m : messages)
-                tmp.put(m.toJSON());
+            for(Map.Entry<String, Message> m : messages.entrySet())
+                tmp.put(m.getValue().toJSON());
             obj.put("messages", new JSONObject().put("nodes", tmp));
 
             tmp = new JSONArray(); //Add all customizations
