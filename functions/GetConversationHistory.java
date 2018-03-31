@@ -76,7 +76,7 @@ public class GetConversationHistory extends AsyncTask<GetConversationHistory.Con
 
             JSONObject threads = new JSONObject(json).getJSONObject("o0").getJSONObject("data")
                     .getJSONObject("message_thread");
-            conversation = new Conversation(threads);
+            conversation = new Conversation(threads, ac.getUserID());
 
         } catch (Exception e) {
             Log.e("threadHistory", e.toString());

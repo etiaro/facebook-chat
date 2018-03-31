@@ -24,6 +24,7 @@ public class Account {
     private boolean loggedIn = false;
     private GetUserInfo.UserInfo info;
     private int reqCounter = 0;
+    public int msgs_recv = 0, serverNumber = 0;
     public CookieManager cookies;
     public Account(String l, String pass, CookieManager cm) throws IOException {
         login = l;

@@ -101,13 +101,7 @@ public class Login extends AsyncTask<Login.LoginCallback, Void, Boolean> {
             sl.load();
             ac.cookies=sl.getCookiesManager();
 
-            JSONObject json;
-            try{
-                json = new JSONObject(sl.getData().replace("for (;;); ", ""));
-            }catch (JSONException e){
-                Log.e("JSON", e.toString());
-                return false;
-            }
+            JSONObject json = new JSONObject(Utils.checkAndFormatResponse(sl.getData()));
 
             if(!json.getString("t").equals("lb"))
                 return false;

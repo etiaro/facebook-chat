@@ -18,15 +18,16 @@ import java.util.Map;
 
 public class Conversation implements Comparator<Conversation>, Comparable<Conversation>{
     public LinkedHashMap<String, Message> messages = new LinkedHashMap<>();
-    public String thread_key, name, image, folder, cannot_reply_reason, emoji, outgoing_bubble_color, snippet;
+    public String thread_key, name, image, folder, cannot_reply_reason, emoji, outgoing_bubble_color, snippet, accountID;
     public int unread_count, messages_count, ephemeral_ttl_mode;
     public Boolean isGroup, is_pin_protected, is_viewer_subscribed, thread_queue_enabled, has_viewer_archived,
             is_page_follow_up;
     public Long updated_time_precise = 0l, mute_until = 0l;
     public HashMap<String, String> nicknames = new HashMap<>();
 
-    public Conversation(JSONObject json) throws JSONException {
+    public Conversation(JSONObject json, String ownerID) throws JSONException {
         update(json);
+        accountID = ownerID;
     }
 	
     public void update(JSONObject json) throws JSONException {
@@ -93,7 +94,7 @@ public class Conversation implements Comparator<Conversation>, Comparable<Conver
 	public JSONObject toJSON(){
         JSONObject obj = null;
         try {
-            obj = new JSONObject().put("thread_key", thread_key).put("isGroup", isGroup)
+            obj = new JSONObject().put("accountID", accountID).put("thread_key", thread_key).put("isGroup", isGroup)
                 .put("unread_count", unread_count).put("messages_count", messages_count)
                 .put("image", image).put("updated_time_precise", updated_time_precise)
                 .put("mute_until", mute_until).put("is_pin_protected", is_pin_protected)

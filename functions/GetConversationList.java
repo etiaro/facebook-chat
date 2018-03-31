@@ -79,7 +79,7 @@ public class GetConversationList extends AsyncTask<GetConversationList.Conversat
             JSONArray threads = new JSONObject(json).getJSONObject("o0").getJSONObject("data")
                 .getJSONObject("viewer").getJSONObject("message_threads").getJSONArray("nodes");
             for(int i = 0; i < threads.length(); i++){
-                conversationList.add(new Conversation(threads.getJSONObject(i)));
+                conversationList.add(new Conversation(threads.getJSONObject(i), ac.getUserID()));
             }
 
         } catch (Exception e) {
