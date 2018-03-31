@@ -107,7 +107,7 @@ public class Login extends AsyncTask<Login.LoginCallback, Void, Boolean> {
                 return false;
 
             Log.d("REQUEST", "Pull 2");
-            params = ac.getFormParams()+"channel=p_"+ ac.getUserID()+
+            params = ac.getFormParams()+"&channel=p_"+ ac.getUserID()+
                     "&seq=0"+
                     "&partition=-2"+
                     "&clientid="+ ac.getClientID()+
@@ -123,7 +123,7 @@ public class Login extends AsyncTask<Login.LoginCallback, Void, Boolean> {
             sl.addCookies(ac.cookies);
             sl.load();
             ac.cookies = sl.getCookiesManager();
-
+            //TODO convert requests get to formatGetData
             //TODO pages login, 2-step verification login
             ac.loadUserdata();
 

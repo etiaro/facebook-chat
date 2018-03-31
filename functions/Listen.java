@@ -15,6 +15,9 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.net.HttpCookie;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
 public class Listen extends IntentService {
     static boolean isStarted = false;
@@ -39,36 +42,64 @@ public class Listen extends IntentService {
     }
 
     @Override
-    protected void onHandleIntent(Intent intent) {
+    protected void onHandleIntent(final Intent intent) {
         if (intent != null) {
             try {
                 Account ac = new Account(intent.getStringExtra("account"));
-                pool(ac);
+                while (true){
+                    try {
+                        pool(ac);
+                    } catch (Exception e) {
+                        Log.e("Listen", e.toString());
+                    }
+                    Thread.sleep(new Random().nextInt(200)+50);
+                }
             } catch (Exception e) {
-                e.printStackTrace();
+                Log.e("Listen", e.toString());
             }
         }
     }
 
-    private void pool(Account ac) throws IOException, JSONException {
-        String form = "channel=p_"+ac.getUserID()+
-                "&seq=0&partition=-2&clientid="+ac.getClientID()+
-                "&viewer_uid="+ac.getUserID()+
-                "&uid="+ac.getUserID()+
-                "&state=active&idle=0&idle=0&cap=8&msgs_recv"+ac.msgs_recv;
+    private void pool(Account ac) throws IOException, JSONException, InterruptedException {
+        ac.listenForm.put("channel", "p_"+ac.getUserID());
+        if(!ac.listenForm.containsKey("seq"))
+            ac.listenForm.put("seq", "0");
+        ac.listenForm.put("partition", "-2");
+        ac.listenForm.put("clientid", ac.getClientID());
+        ac.listenForm.put("viewer_uid", ac.getUserID());
+        ac.listenForm.put("uid", ac.getUserID());
+        ac.listenForm.put("state","active");
+        ac.listenForm.put("idle","0");
+        ac.listenForm.put("cap","8");
+        ac.listenForm.put("msgs_recv", String.valueOf(ac.msgs_recv));
         ac.cookies.getCookieStore().add(URI.create("https://www.facebook.com"), HttpCookie.parse("presence="+ Utils.generatePresence(ac.getUserID())+"; path=/; domain=.facebook.com; secure").get(0));
 
-        Utils.SiteLoader sl = new Utils.SiteLoader("https://"+ac.serverNumber+"-edge-chat.facebook.com/pull?"+form);
+        Utils.SiteLoader sl = new Utils.SiteLoader("https://"+ac.serverNumber+"-edge-chat.facebook.com/pull?"+ac.getFormParams()+Utils.formatGetData(ac.listenForm));
         sl.addCookies(ac.cookies);
         sl.load();
         ac.cookies=sl.getCookiesManager();
 
         JSONObject result = new JSONObject(Utils.checkAndFormatResponse(sl.getData()));
-        if (result.getString("t") == "lb") {
-            form += "&sticky_token="+ result.getJSONObject("lb_info").getString("sticky");
-            form += "&sticky_pool="+ result.getJSONObject("lb_info").getString("pool");
+        Log.d("res", result.toString());
+        if (result.getString("t").equals("lb")) {
+            ac.listenForm.put("sticky_token", result.getJSONObject("lb_info").getString("sticky"));
+            ac.listenForm.put("sticky_pool", result.getJSONObject("lb_info").getString("pool"));
         }
-        Log.d("LISTENER", "did 1st pool");
+        //TODO "fullReload"
+        //TODO types of "ms"
+        if(result.has("ms")){
+            ac.msgs_recv+= result.getJSONArray("ms").length();
+            for(int i = 0; i < result.getJSONArray("ms").length(); i++){
+                if(!result.getJSONArray("ms").getJSONObject(i).getString("type").equals("delta"))
+                    continue;
+                if(!result.getJSONArray("ms").getJSONObject(i).getJSONObject("delta").getString("class").equals("NewMessage"))
+                    continue;
+                callbacks.newMessage(result.getJSONArray("ms").getJSONObject(i).getJSONObject("delta").getString("body"));
+                Log.d("message", result.getJSONArray("ms").getJSONObject(i).toString());
+            }
+        }
+        if(result.has("seq"))
+            ac.listenForm.put("seq", String.valueOf(result.getInt("seq")));
     }
 
     public interface ListenCallbacks{

@@ -3,7 +3,6 @@ package com.etiaro.facebook;
 import android.util.Log;
 
 import com.etiaro.facebook.functions.GetUserInfo;
-import com.etiaro.facebook.functions.Login;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -14,6 +13,7 @@ import java.net.CookieManager;
 import java.net.HttpCookie;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -25,6 +25,7 @@ public class Account {
     private GetUserInfo.UserInfo info;
     private int reqCounter = 0;
     public int msgs_recv = 0, serverNumber = 0;
+    public HashMap<String, String> listenForm = new HashMap<>();
     public CookieManager cookies;
     public Account(String l, String pass, CookieManager cm) throws IOException {
         login = l;
@@ -66,6 +67,8 @@ public class Account {
         clientID = obj.getString("clientID");
         loggedIn = obj.getBoolean("loggedIn");
         reqCounter = obj.getInt("reqCounter");
+        msgs_recv = obj.getInt("msgs_recv");
+        serverNumber = obj.getInt("serverNumber");
         info = new GetUserInfo.UserInfo();
         info.firstName = obj.getJSONObject("info").getString("firstName");
         info.name = obj.getJSONObject("info").getString("name");
@@ -119,7 +122,8 @@ public class Account {
             .put("revision", revision).put("fb_dtsg", fb_dtsg)
             .put("ttstamp",ttstamp).put("firstName",firstName)
             .put("name", name).put("userID", userID).put("clientID",clientID)
-            .put("loggedIn", loggedIn).put("reqCounter", reqCounter);
+            .put("loggedIn", loggedIn).put("reqCounter", reqCounter)
+            .put("msgs_recv", msgs_recv).put("serverNumber", serverNumber);
             obj.put("info", new JSONObject()
                     .put("firstName", info.firstName).put("name", info.name)
                     .put("gender", info.gender).put("isFriend", info.isFriend)

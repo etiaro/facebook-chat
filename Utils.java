@@ -24,6 +24,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -91,14 +92,14 @@ public class Utils {
     public static String generatePresence(String ID) {
         long time = Calendar.getInstance().getTimeInMillis();
         try {
-            return "E" + URLEncoder.encode("{\"v\": 3, \"time\":" + Math.round(time / 1000)+
-                    ",\"user\""+ ID +",\"state\":{"+
-                        "\"ut\":0"+ ",\"t2\":[]"+ ",\"lm2\":null"+ ",\"uct2\":"+time+ ",\"tr\":null"+
-                        ",\"tw\":"+ ((int)(new Random().nextFloat() * 4294967295f)+1)+
-                        ",\"at\":"+ time+
-                    "},\"ch\":{"+
-                        "[\"p_\""+ ID+"]: 0"+
-                    "}"+"}","UTF-8").toLowerCase().replace("+","%20");
+            return "E" + URLEncoder.encode("{\"v\": 3, \"time\":" + Math.round(time / 1000) +
+                    ",\"user\"" + ID + ",\"state\":{" +
+                    "\"ut\":0" + ",\"t2\":[]" + ",\"lm2\":null" + ",\"uct2\":" + time + ",\"tr\":null" +
+                    ",\"tw\":" + ((int) (new Random().nextFloat() * 4294967295f) + 1) +
+                    ",\"at\":" + time +
+                    "},\"ch\":{" +
+                    "[\"p_\"" + ID + "]: 0" +
+                    "}" + "}", "UTF-8").toLowerCase().replace("+", "%20");
         } catch (UnsupportedEncodingException e) {
             return "null";
         }
@@ -115,6 +116,13 @@ public class Utils {
         } catch (UnsupportedEncodingException e) {
             return "null";
         }
+    }
+
+    public static String formatGetData(HashMap<String, String>values){
+        String s = "";
+        for(Map.Entry<String, String> e : values.entrySet())
+            s+= "&"+e.getKey()+"="+e.getValue();
+        return s;
     }
 
     public static String checkAndFormatResponse(String response){
