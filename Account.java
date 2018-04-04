@@ -26,6 +26,7 @@ public class Account {
     private int reqCounter = 0;
     public int msgs_recv = 0, serverNumber = 0;
     public HashMap<String, String> listenForm = new HashMap<>();
+    public HashMap<String, Long> onlineUsers = new HashMap<>();
     public CookieManager cookies;
     public Account(String l, String pass, CookieManager cm) throws IOException {
         login = l;
@@ -52,7 +53,7 @@ public class Account {
                 loggedIn = true;
             }
 
-        clientID = Integer.toHexString(new Random().nextInt(2147483647) | 0);
+        clientID = Integer.toHexString(new Random().nextInt(2147483647));
     }
     public Account(String JSON) throws JSONException{
         JSONObject obj = new JSONObject(JSON);

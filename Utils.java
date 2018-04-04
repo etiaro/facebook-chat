@@ -145,7 +145,6 @@ public class Utils {
         private String data;
         private CookieManager cookiesManager = new CookieManager();
         private HttpURLConnection connection;
-        private boolean headersSet = false;
 
         public SiteLoader(String URL) throws IOException {
             java.net.URL url = new URL(URL);
@@ -188,8 +187,7 @@ public class Utils {
         }
 
         public void load() throws IOException {
-            int status = connection.getResponseCode();
-            Log.d("ResponseCode", String.valueOf(status));
+            int status = getResponseCode();
             InputStream in;
             if (status == HttpURLConnection.HTTP_BAD_REQUEST)
                 in = new BufferedInputStream(connection.getErrorStream());
@@ -209,6 +207,7 @@ public class Utils {
             }
         }
 
+        public int getResponseCode() throws IOException { return connection.getResponseCode(); }
         public String getData(){   return data;    }
         public CookieManager getCookiesManager(){  return cookiesManager;  }
         public String getHeaderField(String name){ return connection.getHeaderField(name);  }

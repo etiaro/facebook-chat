@@ -14,13 +14,13 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.HttpCookie;
+import java.net.SocketTimeoutException;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Iterator;
 import java.util.Random;
 
 public class Listen extends IntentService {
-    static boolean isStarted = false;
+    public static boolean isStarted = false;
     static ListenCallbacks callbacks;
 
     public Listen() {
@@ -35,6 +35,9 @@ public class Listen extends IntentService {
             callbacks = lc;
         if(isStarted)
             return;
+
+        ac.listenForm.clear();
+        ac.msgs_recv = 0;
         Intent intent = new Intent(context, Listen.class);
         intent.putExtra("account", ac.toString());
         context.startService(intent);
@@ -76,8 +79,17 @@ public class Listen extends IntentService {
 
         Utils.SiteLoader sl = new Utils.SiteLoader("https://"+ac.serverNumber+"-edge-chat.facebook.com/pull?"+ac.getFormParams()+Utils.formatGetData(ac.listenForm));
         sl.addCookies(ac.cookies);
-        sl.load();
-        ac.cookies=sl.getCookiesManager();
+        try {
+            sl.load();
+            ac.cookies = sl.getCookiesManager();
+        }catch (SocketTimeoutException e){
+            Log.d("pull", "Timedout...");
+            return;
+        }catch (Exception e){//TODO just EAI_AGAIN
+            ac.serverNumber = new Random().nextInt(5)+1;
+        }
+        if(sl.getResponseCode() != 200)
+            return;
 
         JSONObject result = new JSONObject(Utils.checkAndFormatResponse(sl.getData()));
         Log.d("res", result.toString());
@@ -85,24 +97,82 @@ public class Listen extends IntentService {
             ac.listenForm.put("sticky_token", result.getJSONObject("lb_info").getString("sticky"));
             ac.listenForm.put("sticky_pool", result.getJSONObject("lb_info").getString("pool"));
         }
-        //TODO "fullReload"
-        //TODO types of "ms"
+        if(result.has("tr"))
+            ac.listenForm.put("traceid", result.getString("traceid"));
+        if(result.has("seq"))
+            ac.listenForm.put("seq", String.valueOf(result.getInt("seq")));
+
+        //TODO "fullReload" - is it really needed?
         if(result.has("ms")){
             ac.msgs_recv+= result.getJSONArray("ms").length();
             for(int i = 0; i < result.getJSONArray("ms").length(); i++){
-                if(!result.getJSONArray("ms").getJSONObject(i).getString("type").equals("delta"))
-                    continue;
-                if(!result.getJSONArray("ms").getJSONObject(i).getJSONObject("delta").getString("class").equals("NewMessage"))
-                    continue;
-                callbacks.newMessage(result.getJSONArray("ms").getJSONObject(i).getJSONObject("delta").getString("body"));
-                Log.d("message", result.getJSONArray("ms").getJSONObject(i).toString());
+                try {
+                    handleData(result.getJSONArray("ms").getJSONObject(i), ac);
+                }catch (Exception e){
+                    Log.e("listen", "Error on listen data parsing");
+                }
             }
         }
-        if(result.has("seq"))
-            ac.listenForm.put("seq", String.valueOf(result.getInt("seq")));
     }
 
     public interface ListenCallbacks{
-        void newMessage(String msg);
+        void newMessage(Message msg);
+        void typing(String threadid, String userid, boolean isTyping);
+    }
+    private void handleData(JSONObject ms, Account ac) throws JSONException {
+        String userID;
+        switch (ms.getString("type")){
+            case "typ":
+                userID = "";
+                if(ms.has("realtime_viewer_fbid"))
+                    userID = ms.getString("realtime_viewer_fbid");
+                else if(ms.has("from"))
+                    userID = ms.getString("from");
+
+                String threadID = "";
+                if(ms.has("to"))
+                    threadID = ms.getString("to");
+                else if(ms.has("thread_fbid"))
+                    threadID = ms.getString("thread_fbid");
+                else if(ms.has("from"))
+                    threadID = ms.getString("from");
+
+                boolean isTyping = ms.getInt("st") != 0;
+                callbacks.typing(userID, threadID, isTyping);
+                break;
+            case "chatproxy-presence":
+                Iterator<?> keys = ms.getJSONObject("buddyList").keys();
+                while(keys.hasNext()){
+                    userID = (String)keys.next();
+                    JSONObject obj = ms.getJSONObject("buddyList").getJSONObject(userID);
+                    if (!obj.has("lat") || !obj.has("p")) continue;
+                    if(obj.getInt("p") == 2)
+                        ac.onlineUsers.put(userID, 0l);
+                    else
+                        ac.onlineUsers.put(userID, obj.getLong("lat")*1000);
+                    Log.d("suc", "success");
+                }
+                break;
+            case "buddylist_overlay":
+                Iterator<?> overlayKeys = ms.getJSONObject("overlay").keys();
+                while (overlayKeys.hasNext()){
+                    userID = (String) overlayKeys.next();
+                    JSONObject obj = ms.getJSONObject("overlay").getJSONObject(userID);
+                    if(obj.getInt("a") == 2)
+                        ac.onlineUsers.put(userID, 0l);
+                    else
+                        ac.onlineUsers.put(userID, obj.getLong("la")*1000);
+                }
+                break;
+            case "delta":
+                JSONObject delta = ms.getJSONObject("delta");
+                switch (delta.getString("class")){
+                    case "NewMessage":
+                        Message msg = new Message(delta);
+                        callbacks.newMessage(msg);
+                        break;
+                }
+                break;
+        }
     }
 }

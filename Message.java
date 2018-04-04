@@ -1,36 +1,58 @@
 package com.etiaro.facebook;
 
+import android.support.annotation.NonNull;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.Comparator;
 
 /**
  * Created by jakub on 21.03.18.
  */
 
-public class Message {
-    public String text, senderID, __typename, message_id, offline_threading_id, sender_email;
+public class Message implements Comparator<Message>, Comparable<Message>{
+    public String text, senderID, __typename, message_id, offline_threading_id, conversation_id, sender_email;
     public int ttl;
     public Long timestamp_precise;
     public boolean unread, is_sponsored;
-    Message(JSONObject json) throws JSONException {
+    public Message(JSONObject json) throws JSONException {
         update(json);
     }
 	
 	public void update(JSONObject json) throws JSONException {
+        if(json.has("irisSeqId")){
+            text = json.getString("body");
+            senderID = json.getJSONObject("messageMetadata").getString("actorFbId");
+            message_id = json.getJSONObject("messageMetadata").getString("messageId");
+            offline_threading_id = json.getJSONObject("messageMetadata").getString("offlineThreadingId");
+            if(json.getJSONObject("messageMetadata").getJSONObject("threadKey").has("threadFbId"))
+                conversation_id = json.getJSONObject("messageMetadata").getJSONObject("threadKey").getString("threadFbId");
+            else if(json.getJSONObject("messageMetadata").getJSONObject("threadKey").has("otherUserFbId"))
+                conversation_id = json.getJSONObject("messageMetadata").getJSONObject("threadKey").getString("otherUserFbId");
+
+            timestamp_precise = Long.valueOf(json.getJSONObject("messageMetadata").getString("timestamp"));
+            unread = true;
+            return;
+        }
 		if(!json.has("message_id")) {
             text = json.getString("snippet");
             senderID = json.getJSONObject("message_sender").getJSONObject("messaging_actor").getString("id");
         }else{
-            __typename = json.getString("__typename");
+		    if(json.has("__typename"))
+		        __typename = json.getString("__typename");
             message_id = json.getString("message_id");
             offline_threading_id = json.getString("offline_threading_id");  //???
             senderID = json.getJSONObject("message_sender").getString("id");
-            sender_email = json.getJSONObject("message_sender").getString("email");
-            ttl = json.getInt("ttl");
+            if(json.getJSONObject("message_sender").has("email"))
+                sender_email = json.getJSONObject("message_sender").getString("email");//TODO error here!
+            if(json.has("ttl"))
+                ttl = json.getInt("ttl");
             unread = json.getBoolean("unread");
-            is_sponsored = json.getBoolean("is_sponsored");
-            text = json.getString("snippet");//json.getJSONObject("message").getString("text");
+            if(json.has("is_sponsored"))
+                is_sponsored = json.getBoolean("is_sponsored");
+            text = json.getJSONObject("message").getString("text");
         }
         timestamp_precise = Long.valueOf(json.getString("timestamp_precise"));
 	}
@@ -38,15 +60,15 @@ public class Message {
 	public JSONObject toJSON(){
         JSONObject obj = null;
         try {
-            obj = new JSONObject().put("text", text).put("senderID", senderID)
-                    .put("__typename", __typename).put("message_sender", new JSONObject()
-                        .put("email", sender_email).put("id", senderID)
-                        .put("messaging_actor", new JSONObject()
-                            .put("id", senderID)))
-                    .put("message_id", message_id)
-                    .put("offline_threading_id", offline_threading_id).put("ttl", ttl)
-                    .put("unread", unread).put("is_sponsored", is_sponsored)
-                    .put("timestamp_precise", timestamp_precise).put("snippet", text);
+            obj = new JSONObject().put("message", new JSONObject().put("text", text)).put("senderID", senderID)
+                .put("__typename", __typename).put("message_sender", new JSONObject()
+                    .put("email", sender_email).put("id", senderID)
+                    .put("messaging_actor", new JSONObject()
+                        .put("id", senderID)))
+                .put("message_id", message_id)
+                .put("offline_threading_id", offline_threading_id).put("ttl", ttl)
+                .put("unread", unread).put("is_sponsored", is_sponsored)
+                .put("timestamp_precise", timestamp_precise).put("snippet", text);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -56,6 +78,16 @@ public class Message {
 	public String toString(){
         return toJSON().toString();
 	}
+
+    @Override
+    public int compare(Message m1, Message m2) {
+        return (int)(m2.timestamp_precise - m1.timestamp_precise);
+    }
+
+    @Override
+    public int compareTo(@NonNull Message msg) {
+        return (int)(msg.timestamp_precise - this.timestamp_precise);
+    }
 }
 
 //TODO more args(threadhistory) and not too much IFs statements

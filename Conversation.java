@@ -1,15 +1,20 @@
 package com.etiaro.facebook;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
+
+import com.etiaro.talkie.MemoryManger;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,6 +29,7 @@ public class Conversation implements Comparator<Conversation>, Comparable<Conver
             is_page_follow_up;
     public Long updated_time_precise = 0l, mute_until = 0l;
     public HashMap<String, String> nicknames = new HashMap<>();
+    public ArrayList<String> typing = new ArrayList<>();
 
     public Conversation(JSONObject json, String ownerID) throws JSONException {
         update(json);
@@ -35,7 +41,10 @@ public class Conversation implements Comparator<Conversation>, Comparable<Conver
            JSONArray msgs = json.getJSONObject("messages").getJSONArray("nodes");
             for (int i = 0; i < msgs.length(); i++) {
                 Message msg = new Message(msgs.getJSONObject(i));
-                messages.put(msg.message_id, msg);
+                if(messages.containsKey(msg.message_id))
+                    messages.get(msg.message_id).update(msg.toJSON());
+                else
+                    messages.put(msg.message_id, msg);
             }
         }
         snippet = json.getJSONObject("last_message").getJSONArray("nodes").getJSONObject(0).getString("snippet");
@@ -106,8 +115,8 @@ public class Conversation implements Comparator<Conversation>, Comparable<Conver
 
 
             JSONArray tmp = new JSONArray(); //Add all messages
-            for(Map.Entry<String, Message> m : messages.entrySet())
-                tmp.put(m.getValue().toJSON());
+            for(Message m : messages.values())
+                tmp.put(m.toJSON());
             obj.put("messages", new JSONObject().put("nodes", tmp));
 
             tmp = new JSONArray(); //Add all customizations
@@ -124,6 +133,44 @@ public class Conversation implements Comparator<Conversation>, Comparable<Conver
             e.printStackTrace();
         }
         return obj;
+    }
+
+    public void updateMessages(Message... msgs){
+	    for(Message m : msgs){
+	        if(messages.containsKey(m.message_id))
+                try {
+                    messages.get(m.message_id).update(m.toJSON());
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            else
+                messages.put(m.message_id, m);
+        }
+        sortMessages();
+    }
+    public void sortMessages(){
+        orderByValue(messages, new Comparator<Message>() {
+            @Override
+            public int compare(Message c1, Message c2) {
+                return c1.compareTo(c2);
+            }
+        });
+
+        updated_time_precise = ((Message)messages.values().toArray()[0]).timestamp_precise;
+        snippet = ((Message)messages.values().toArray()[0]).text;
+    }
+    static <K, V> void orderByValue(LinkedHashMap<K, V> m, final Comparator<? super V> c) {
+        List<Map.Entry<K, V>> entries = new ArrayList<>(m.entrySet());
+        Collections.sort(entries, new Comparator<Map.Entry<K, V>>() {
+            @Override
+            public int compare(Map.Entry<K, V> lhs, Map.Entry<K, V> rhs) {
+                return c.compare(lhs.getValue(), rhs.getValue());
+            }
+        });
+        m.clear();
+        for(Map.Entry<K, V> e : entries) {
+            m.put(e.getKey(), e.getValue());
+        }
     }
 	
     public String toString(){
