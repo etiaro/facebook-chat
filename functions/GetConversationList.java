@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 public class GetConversationList extends AsyncTask<GetConversationList.ConversationListCallback, Void, Boolean> {
     ConversationListCallback[] callbacks;
     ArrayList<Conversation> conversationList = new ArrayList<>();
+    ArrayList<GetUserInfo.UserInfo> users = new ArrayList<>();
     boolean success = true;
     boolean isAsync = false;
     int attepts = 0;
@@ -80,6 +81,10 @@ public class GetConversationList extends AsyncTask<GetConversationList.Conversat
                 .getJSONObject("viewer").getJSONObject("message_threads").getJSONArray("nodes");
             for(int i = 0; i < threads.length(); i++){
                 conversationList.add(new Conversation(threads.getJSONObject(i), ac.getUserID()));
+                JSONArray participants = threads.getJSONObject(i).getJSONObject("all_participants").getJSONArray("nodes");
+                for(int y = 0; y < participants.length(); y++){
+                    users.add(new GetUserInfo.UserInfo(participants.getJSONObject(y)));
+                }
             }
 
         } catch (Exception e) {
@@ -105,7 +110,7 @@ public class GetConversationList extends AsyncTask<GetConversationList.Conversat
     protected void onPostExecute(final Boolean success) {
         if (success) {
             for (ConversationListCallback c : callbacks) {
-                c.success(conversationList);
+                c.success(conversationList, users);
             }
         } else {
             for (ConversationListCallback c : callbacks) {
@@ -122,7 +127,7 @@ public class GetConversationList extends AsyncTask<GetConversationList.Conversat
     }
 
     public interface ConversationListCallback {
-        void success(ArrayList<Conversation> list);
+        void success(ArrayList<Conversation> list, ArrayList<GetUserInfo.UserInfo> users);
         void fail();
         void cancelled();
     }

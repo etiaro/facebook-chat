@@ -6,6 +6,7 @@ import android.util.Log;
 import com.etiaro.facebook.Account;
 import com.etiaro.facebook.Utils;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Random;
@@ -17,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 public class GetUserInfo extends AsyncTask<GetUserInfo.UserInfoCallback, Void, Boolean> {
     UserInfoCallback[] callbacks;
-    UserInfo userInfo = new UserInfo();
+    UserInfo userInfo;
     Account ac;
     String ID;
     boolean success = true;
@@ -59,14 +60,7 @@ public class GetUserInfo extends AsyncTask<GetUserInfo.UserInfoCallback, Void, B
             }
 
             JSONObject obj = new JSONObject(json).getJSONObject("payload").getJSONObject("profiles").getJSONObject(ID);
-            userInfo.name = obj.getString("name");
-            userInfo.firstName = obj.getString("firstName");
-            userInfo.vanity = obj.getString("vanity");
-            userInfo.thumbSrc = obj.getString("thumbSrc");
-            userInfo.profileUrl = obj.getString("uri");
-            userInfo.gender = obj.getString("gender");
-            userInfo.type = obj.getString("type");
-            userInfo.isFriend = obj.getBoolean("is_friend");
+            userInfo = new UserInfo(obj, ID);
             /*
                                 "i18nGender":1,
                                 "is_active":false,
@@ -115,8 +109,46 @@ public class GetUserInfo extends AsyncTask<GetUserInfo.UserInfoCallback, Void, B
 
 
     public static class UserInfo{
-        public String name, firstName, vanity, thumbSrc, profileUrl, gender, type;
+        public String name, firstName, vanity, thumbSrc, profileUrl, gender, type, id;
         public boolean isFriend;
+        public UserInfo(JSONObject obj, String id) throws JSONException {
+            name = obj.getString("name");
+            firstName = obj.getString("firstName");
+            vanity = obj.getString("vanity");
+            thumbSrc = obj.getString("thumbSrc");
+            profileUrl = obj.getString("uri");
+            gender = obj.getString("gender");
+            type = obj.getString("type");
+            isFriend = obj.getBoolean("is_friend");
+            this.id = id;
+        }
+        public UserInfo(JSONObject obj) throws JSONException {
+            id = obj.getJSONObject("messaging_actor").getString("id");
+            name = obj.getJSONObject("messaging_actor").getString("name");
+            type = obj.getJSONObject("messaging_actor").getString("__typename");
+            profileUrl = obj.getJSONObject("messaging_actor").getString("url");
+            thumbSrc = obj.getJSONObject("messaging_actor").getJSONObject("big_image_src").getString("uri");
+            vanity = obj.getJSONObject("messaging_actor").getString("username"); //NOT sure what "vanity" is
+
+            if(type.equals("User")){ // facebook sends removed from conversation users as ReducedMessagingActor
+                firstName = obj.getJSONObject("messaging_actor").getString("short_name");
+                isFriend = obj.getJSONObject("messaging_actor").getBoolean("is_viewer_friend");
+                gender = obj.getJSONObject("messaging_actor").getString("gender");
+            }
+        }
+        public String toString(){
+            try {
+                JSONObject obj = new JSONObject().put("messaging_actor", new JSONObject()
+                        .put("id", id).put("name", name).put("__typename", type)
+                        .put("url", profileUrl).put("big_image_src", new JSONObject().put("uri", thumbSrc))
+                        .put("username", vanity).put("short_name",firstName)
+                        .put("is_viewer_friend", isFriend).put("gender", gender));
+                return obj.toString();
+            } catch (JSONException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
     }
     public interface UserInfoCallback{
         void success(UserInfo info);

@@ -29,6 +29,7 @@ public class Conversation implements Comparator<Conversation>, Comparable<Conver
             is_page_follow_up;
     public Long updated_time_precise = 0l, mute_until = 0l;
     public HashMap<String, String> nicknames = new HashMap<>();
+    public ArrayList<String> userIDs = new ArrayList<>();
     public ArrayList<String> typing = new ArrayList<>();
 
     public Conversation(JSONObject json, String ownerID) throws JSONException {
@@ -64,6 +65,12 @@ public class Conversation implements Comparator<Conversation>, Comparable<Conver
             is_page_follow_up = json.getBoolean("is_page_follow_up");
         cannot_reply_reason = json.getString("cannot_reply_reason");
         ephemeral_ttl_mode = json.getInt("ephemeral_ttl_mode"); //not shure what that means
+        if(json.has("all_participants")){
+            JSONArray users = json.getJSONObject("all_participants").getJSONArray("nodes");
+            for(int i = 0; i < users.length(); i++){
+                userIDs.add(users.getJSONObject(i).getJSONObject("messaging_actor").getString("id"));
+            }
+        }
         if(json.get("customization_info") instanceof JSONObject) {
             emoji = json.getJSONObject("customization_info").getString("emoji");
             outgoing_bubble_color = json.getJSONObject("customization_info").getString("outgoing_bubble_color");
@@ -82,7 +89,8 @@ public class Conversation implements Comparator<Conversation>, Comparable<Conver
         }else if (json.getJSONObject("thread_key").getString("thread_fbid") != "null") {
             thread_key = json.getJSONObject("thread_key").getString("thread_fbid");
             name = json.getString("name");
-            image = json.getJSONObject("image").getString("uri");
+            if(json.has("image") && json.get("image") instanceof JSONObject)
+                image = json.getJSONObject("image").getString("uri");
             isGroup = true;
         } else if (json.getJSONObject("thread_key").getString("other_user_id") != "null") {
             thread_key = json.getJSONObject("thread_key").getString("other_user_id");

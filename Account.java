@@ -70,14 +70,7 @@ public class Account {
         reqCounter = obj.getInt("reqCounter");
         msgs_recv = obj.getInt("msgs_recv");
         serverNumber = obj.getInt("serverNumber");
-        info = new GetUserInfo.UserInfo();
-        info.firstName = obj.getJSONObject("info").getString("firstName");
-        info.name = obj.getJSONObject("info").getString("name");
-        info.gender = obj.getJSONObject("info").getString("gender");
-        info.isFriend = obj.getJSONObject("info").getBoolean("isFriend");
-        info.profileUrl = obj.getJSONObject("info").getString("profileUrl");
-        info.type = obj.getJSONObject("info").getString("type");
-        info.vanity = obj.getJSONObject("info").getString("vanity");
+        info = new GetUserInfo.UserInfo(obj.getJSONObject("info"), getUserID());
 
         //cookies parsing
         cookies = new CookieManager();
@@ -127,9 +120,9 @@ public class Account {
             .put("msgs_recv", msgs_recv).put("serverNumber", serverNumber);
             obj.put("info", new JSONObject()
                     .put("firstName", info.firstName).put("name", info.name)
-                    .put("gender", info.gender).put("isFriend", info.isFriend)
-                    .put("profileUrl", info.profileUrl).put("type", info.type)
-                    .put("vanity",info.vanity));
+                    .put("gender", info.gender).put("is_friend", info.isFriend)
+                    .put("uri", info.profileUrl).put("type", info.type)
+                    .put("vanity",info.vanity).put("thumbSrc", info.thumbSrc));
 
             //Stringify cookies
             JSONObject c = new JSONObject();
