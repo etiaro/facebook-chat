@@ -48,6 +48,7 @@ public class Conversation implements Comparator<Conversation>, Comparable<Conver
                     messages.put(msg.message_id, msg);
             }
         }
+        sortMessages();
         snippet = json.getJSONObject("last_message").getJSONArray("nodes").getJSONObject(0).getString("snippet");
 
         unread_count = json.getInt("unread_count");
@@ -69,11 +70,16 @@ public class Conversation implements Comparator<Conversation>, Comparable<Conver
             JSONArray users = json.getJSONObject("all_participants").getJSONArray("nodes");
             for(int i = 0; i < users.length(); i++){
                 userIDs.add(users.getJSONObject(i).getJSONObject("messaging_actor").getString("id"));
+                if(users.getJSONObject(i).getJSONObject("messaging_actor").has("name"))
+                    nicknames.put(users.getJSONObject(i).getJSONObject("messaging_actor").getString("id"),
+                        users.getJSONObject(i).getJSONObject("messaging_actor").getString("name"));
             }
         }
-        if(json.get("customization_info") instanceof JSONObject) {
-            emoji = json.getJSONObject("customization_info").getString("emoji");
-            outgoing_bubble_color = json.getJSONObject("customization_info").getString("outgoing_bubble_color");
+        if(json.has("customization_info") && json.get("customization_info") instanceof JSONObject) {
+            if(json.getJSONObject("customization_info").has("emoji"))
+                emoji = json.getJSONObject("customization_info").getString("emoji");
+            if(json.getJSONObject("customization_info").has("outgoing_bubble_color"))
+                outgoing_bubble_color = json.getJSONObject("customization_info").getString("outgoing_bubble_color");
             JSONArray customizations = json.getJSONObject("customization_info").getJSONArray("participant_customizations");
             for (int i = 0; i < customizations.length(); i++)
                 nicknames.put(customizations.getJSONObject(i).getString("participant_id"),
@@ -131,12 +137,9 @@ public class Conversation implements Comparator<Conversation>, Comparable<Conver
             for(Map.Entry<String, String> nick : nicknames.entrySet())
                 tmp.put(new JSONObject().put("participant_id", nick.getKey()).put("nickname", nick.getValue()));
 
-            if(emoji != null || outgoing_bubble_color != null || tmp.length() > 0)
-               obj.put("customization_info", (new JSONObject().put("emoji", emoji)
-                    .put("outgoing_bubble_color", outgoing_bubble_color)
-                    .put("participant_customizations", tmp)));
-            else
-                obj.put("customization_info", "null");
+           obj.put("customization_info", (new JSONObject().put("emoji", emoji)
+                .put("outgoing_bubble_color", outgoing_bubble_color)
+                .put("participant_customizations", tmp)));
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -157,15 +160,17 @@ public class Conversation implements Comparator<Conversation>, Comparable<Conver
         sortMessages();
     }
     public void sortMessages(){
+        if(messages.size() <= 0)
+            return;
         orderByValue(messages, new Comparator<Message>() {
-            @Override
+                @Override
             public int compare(Message c1, Message c2) {
                 return c1.compareTo(c2);
             }
         });
 
-        updated_time_precise = ((Message)messages.values().toArray()[0]).timestamp_precise;
-        snippet = ((Message)messages.values().toArray()[0]).text;
+        updated_time_precise = ((Message) messages.values().toArray()[0]).timestamp_precise;
+        snippet = ((Message) messages.values().toArray()[0]).text;
     }
     static <K, V> void orderByValue(LinkedHashMap<K, V> m, final Comparator<? super V> c) {
         List<Map.Entry<K, V>> entries = new ArrayList<>(m.entrySet());
