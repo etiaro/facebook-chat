@@ -279,25 +279,20 @@ public class Conversation implements Comparator<Conversation>, Comparable<Conver
         }
         }
         ]
-    },
-        "read_receipts":{
-        "nodes":[
-        {
-            "watermark":"1521612131129",
-                "action":"1521619200141",
-                "actor":{
-            "id":"100014199343435"
-        }
         },
-        {
-            "watermark":"1521643267761",
+        "read_receipts":{
+            "nodes":[
+            {
+                "watermark":"1521612131129",
+                "action":"1521619200141",
+                "actor":{"id":"100014199343435"}
+            },
+            {
+                "watermark":"1521643267761",
                 "action":"1521643267761",
-                "actor":{
-            "id":"100003213968599"
-        }
-        }
-        ]
-    },
+                "actor":{"id":"100003213968599"}
+            }]
+        },
         "delivery_receipts":{
         "nodes":[
         {

@@ -1,11 +1,13 @@
 package com.etiaro.facebook;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 
 /**
@@ -17,6 +19,7 @@ public class Message implements Comparator<Message>, Comparable<Message>{
     public int ttl;
     public Long timestamp_precise;
     public boolean unread, is_sponsored;
+    public ArrayList<JSONObject> obj = new ArrayList<>();
     public Message(JSONObject json) throws JSONException {
         update(json);
     }
@@ -52,7 +55,15 @@ public class Message implements Comparator<Message>, Comparable<Message>{
             unread = json.getBoolean("unread");
             if(json.has("is_sponsored"))
                 is_sponsored = json.getBoolean("is_sponsored");
-            text = json.getJSONObject("message").getString("text");
+            if(json.has("message") && json.getJSONObject("message").has("text"))
+                text = json.getJSONObject("message").getString("text");
+        }
+        if(json.has("blob_attachments") && json.getJSONArray("blob_attachments").length() > 0) {
+            for(int i = 0; i < json.getJSONArray("blob_attachments").length(); i++){
+                obj.add(json.getJSONArray("blob_attachments").getJSONObject(i));
+            }
+            text += "ATTACHMENT"; //TEMP
+            //TODO support attachments(new class/innerclass?)
         }
         timestamp_precise = Long.valueOf(json.getString("timestamp_precise"));
 	}
@@ -108,5 +119,5 @@ public class Message implements Comparator<Message>, Comparable<Message>{
     "message":{"ranges":[]},
     "extensible_attachment":null,
     "sticker":null,
-    "blob_attachments":[],
+    TODO "blob_attachments":[],
 }*/

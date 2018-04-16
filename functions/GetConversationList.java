@@ -64,7 +64,7 @@ public class GetConversationList extends AsyncTask<GetConversationList.Conversat
 
             String json = Utils.checkAndFormatResponse(sl.getData());
             if(json == null){
-                Log.e("talkie", "failed GetUserInfo");
+                Log.e("talkie", "failed GetConversationList");
                 if(isAsync){
                     TimeUnit.SECONDS.sleep(new Random().nextLong()*5);
                     getThreadList();
