@@ -88,8 +88,8 @@ public class GetConversationHistory extends AsyncTask<GetConversationHistory.Con
     @Override
     protected Boolean doInBackground(ConversationHistoryCallback... userInfoCallbacks) { //async call
         callbacks = userInfoCallbacks;
-        //if(callbacks.length <= 0)
-        //return false;
+        if(callbacks.length <= 0)
+            return false;
         isAsync = true;
         getThreadHistory();
 

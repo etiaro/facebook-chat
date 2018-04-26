@@ -67,7 +67,17 @@ public class Utils {
         }
         return generatedString;
     }
-
+    public static String generateThreadingID(String clientID){
+        return "<"+Calendar.getInstance().getTimeInMillis()+":"+Math.abs(new Random().nextLong())%4294967295l+"-"+clientID+"@mail.projektitan.com>";
+    }
+    public static String generateOfflineThreadingID(){
+        float ret = Calendar.getInstance().getTimeInMillis();
+        float value = (float)Math.floor(new Random().nextFloat()*4294967295f);
+        String str = ("0000000000000000000000" + Integer.toBinaryString(Float.floatToIntBits(value)));
+        str = str.substring(str.length()-23);
+        String msgs = Integer.toBinaryString(Float.floatToIntBits(ret)) + str;
+        return String.valueOf(Long.parseLong(msgs, 2));
+    }
     public static String readBuffer(InputStream is) throws IOException {
         String ret = "";
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
@@ -167,12 +177,10 @@ public class Utils {
         }
 
         public void post(String params) throws IOException {
-
             connection.setDoOutput(true);
             connection.setRequestMethod( "POST" );
             connection.setRequestProperty( "Content-Type", "application/x-www-form-urlencoded");
             connection.setRequestProperty( "charset", "utf-8");
-            connection.setRequestProperty( "Content-Length", Integer.toString(params.length()));
             connection.setRequestProperty( "Referer", "https://www.facebook.com/");
             connection.setRequestProperty( "Origin", "https://www.facebook.com");
             connection.setRequestProperty( "User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/600.3.18 (KHTML, like Gecko) Version/8.0.3 Safari/600.3.18");
@@ -189,12 +197,15 @@ public class Utils {
         public void load() throws IOException {
             int status = getResponseCode();
             InputStream in;
-            if (status == HttpURLConnection.HTTP_BAD_REQUEST)
-                in = new BufferedInputStream(connection.getErrorStream());
-           else
+            if (status == HttpURLConnection.HTTP_OK) {
                 in = new BufferedInputStream(connection.getInputStream());
+                data = readBuffer(in);  //connected loads site content
+            } else {
+                //in = new BufferedInputStream(connection.getErrorStream());
+                data = "";//readBuffer(in);  //connected loads site content
+                //in.close();
+           }
 
-            data = readBuffer(in);  //connected loads site content
             connection.disconnect();
 
             Map<String, List<String>> headerFields = connection.getHeaderFields();

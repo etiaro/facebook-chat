@@ -26,7 +26,8 @@ public class Message implements Comparator<Message>, Comparable<Message>{
 	
 	public void update(JSONObject json) throws JSONException {
         if(json.has("irisSeqId")){
-            text = json.getString("body");
+            text = json.has("body") ?
+                    json.getString("body") : "";
             senderID = json.getJSONObject("messageMetadata").getString("actorFbId");
             message_id = json.getJSONObject("messageMetadata").getString("messageId");
             offline_threading_id = json.getJSONObject("messageMetadata").getString("offlineThreadingId");
@@ -49,7 +50,7 @@ public class Message implements Comparator<Message>, Comparable<Message>{
             offline_threading_id = json.getString("offline_threading_id");  //???
             senderID = json.getJSONObject("message_sender").getString("id");
             if(json.getJSONObject("message_sender").has("email"))
-                sender_email = json.getJSONObject("message_sender").getString("email");//TODO error here!
+                sender_email = json.getJSONObject("message_sender").getString("email");
             if(json.has("ttl"))
                 ttl = json.getInt("ttl");
             unread = json.getBoolean("unread");
@@ -61,6 +62,7 @@ public class Message implements Comparator<Message>, Comparable<Message>{
         if(json.has("blob_attachments") && json.getJSONArray("blob_attachments").length() > 0) {
             for(int i = 0; i < json.getJSONArray("blob_attachments").length(); i++){
                 obj.add(json.getJSONArray("blob_attachments").getJSONObject(i));
+                Log.d("attachment", json.getJSONArray("blob_attachments").getJSONObject(i).toString());
             }
             text += "ATTACHMENT"; //TEMP
             //TODO support attachments(new class/innerclass?)
@@ -100,8 +102,6 @@ public class Message implements Comparator<Message>, Comparable<Message>{
         return (int)(msg.timestamp_precise - this.timestamp_precise);
     }
 }
-
-//TODO more args(threadhistory) and not too much IFs statements
 
 
 /*{
