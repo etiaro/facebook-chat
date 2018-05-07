@@ -19,7 +19,7 @@ public class Message implements Comparator<Message>, Comparable<Message>{
     public int ttl;
     public Long timestamp_precise;
     public boolean unread, is_sponsored;
-    public ArrayList<JSONObject> obj = new ArrayList<>();
+    public ArrayList<Attachment> attachments = new ArrayList<>();
     public Message(JSONObject json) throws JSONException {
         update(json);
     }
@@ -61,11 +61,8 @@ public class Message implements Comparator<Message>, Comparable<Message>{
         }
         if(json.has("blob_attachments") && json.getJSONArray("blob_attachments").length() > 0) {
             for(int i = 0; i < json.getJSONArray("blob_attachments").length(); i++){
-                obj.add(json.getJSONArray("blob_attachments").getJSONObject(i));
-                Log.d("attachment", json.getJSONArray("blob_attachments").getJSONObject(i).toString());
+                attachments.add(new Attachment(json.getJSONArray("blob_attachments").getJSONObject(i)));
             }
-            text += "ATTACHMENT"; //TEMP
-            //TODO support attachments(new class/innerclass?)
         }
         timestamp_precise = Long.valueOf(json.getString("timestamp_precise"));
 	}
@@ -82,6 +79,10 @@ public class Message implements Comparator<Message>, Comparable<Message>{
                 .put("offline_threading_id", offline_threading_id).put("ttl", ttl)
                 .put("unread", unread).put("is_sponsored", is_sponsored)
                 .put("timestamp_precise", timestamp_precise).put("snippet", text);
+            JSONArray arr = new JSONArray();
+            for(Attachment a : attachments)
+                arr.put(a.toJSON());
+            obj.put("blob_attachments", arr);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -119,5 +120,4 @@ public class Message implements Comparator<Message>, Comparable<Message>{
     "message":{"ranges":[]},
     "extensible_attachment":null,
     "sticker":null,
-    TODO "blob_attachments":[],
 }*/

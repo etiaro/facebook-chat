@@ -86,9 +86,13 @@ public class Conversation implements Comparator<Conversation>, Comparable<Conver
                         customizations.getJSONObject(i).getString("nickname"));
         }
 
-        String snippedSenderID = json.getJSONObject("last_message").getJSONArray("nodes").getJSONObject(0).getJSONObject("message_sender").getJSONObject("messaging_actor").getString("id");
-        snippet = nicknames.get(snippedSenderID) + ": ";
-        snippet += json.getJSONObject("last_message").getJSONArray("nodes").getJSONObject(0).getString("snippet");
+        if(json.getJSONObject("last_message").getJSONArray("nodes").getJSONObject(0).has("message_sender")){
+            String snippetSenderID = json.getJSONObject("last_message").getJSONArray("nodes").getJSONObject(0).getJSONObject("message_sender").getJSONObject("messaging_actor").getString("id");
+            snippet = nicknames.get(snippetSenderID) + ": ";
+            snippet += json.getJSONObject("last_message").getJSONArray("nodes").getJSONObject(0).getString("snippet");
+        }else{
+            snippet = json.getJSONObject("last_message").getJSONArray("nodes").getJSONObject(0).getString("snippet");
+        }
 
         if (json.get("thread_key") instanceof String) {
             thread_key = json.getString("thread_key");
