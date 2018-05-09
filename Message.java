@@ -9,6 +9,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 
 /**
  * Created by jakub on 21.03.18.
@@ -78,10 +79,13 @@ public class Message implements Comparator<Message>, Comparable<Message>{
                 .put("message_id", message_id)
                 .put("offline_threading_id", offline_threading_id).put("ttl", ttl)
                 .put("unread", unread).put("is_sponsored", is_sponsored)
-                .put("timestamp_precise", timestamp_precise).put("snippet", text);
+                .put("timestamp_precise", timestamp_precise).put("snippet", text)
+                .put("messageMetadata", new JSONObject().put("threadKey", new JSONObject().put("threadFbId", conversation_id)));
             JSONArray arr = new JSONArray();
-            for(Attachment a : attachments)
-                arr.put(a.toJSON());
+
+            Iterator<Attachment> it = attachments.iterator();
+            while(it.hasNext())
+                arr.put(it.next());
             obj.put("blob_attachments", arr);
         } catch (JSONException e) {
             e.printStackTrace();
@@ -95,12 +99,12 @@ public class Message implements Comparator<Message>, Comparable<Message>{
 
     @Override
     public int compare(Message m1, Message m2) {
-        return (int)(m2.timestamp_precise - m1.timestamp_precise);
+        return (int)(m1.timestamp_precise - m2.timestamp_precise);
     }
 
     @Override
     public int compareTo(@NonNull Message msg) {
-        return (int)(msg.timestamp_precise - this.timestamp_precise);
+        return (int)(this.timestamp_precise - msg.timestamp_precise);
     }
 }
 
