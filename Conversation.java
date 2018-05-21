@@ -80,11 +80,14 @@ public class Conversation implements Comparator<Conversation>, Comparable<Conver
                 emoji = json.getJSONObject("customization_info").getString("emoji");
             if (json.getJSONObject("customization_info").has("outgoing_bubble_color"))
                 outgoing_bubble_color = json.getJSONObject("customization_info").getString("outgoing_bubble_color");
+
             JSONArray customizations = json.getJSONObject("customization_info").getJSONArray("participant_customizations");
             for (int i = 0; i < customizations.length(); i++)
                 nicknames.put(customizations.getJSONObject(i).getString("participant_id"),
                         customizations.getJSONObject(i).getString("nickname"));
         }
+        if(outgoing_bubble_color == null || outgoing_bubble_color.equals("null"))
+            outgoing_bubble_color = "0084ff";
 
         if(json.getJSONObject("last_message").getJSONArray("nodes").getJSONObject(0).has("message_sender")){
             String snippetSenderID = json.getJSONObject("last_message").getJSONArray("nodes").getJSONObject(0).getJSONObject("message_sender").getJSONObject("messaging_actor").getString("id");
@@ -154,6 +157,12 @@ public class Conversation implements Comparator<Conversation>, Comparable<Conver
             e.printStackTrace();
         }
         return obj;
+    }
+
+    public void addReadReceipt(String reader, Long time){//TODO working
+        for(Message m : messages.values())
+            if(m.unread == true || m.timestamp_precise <= time)
+                m.unread = false;
     }
 
     public void updateMessages(Message... msgs) {

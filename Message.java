@@ -19,7 +19,7 @@ public class Message implements Comparator<Message>, Comparable<Message>{
     public String text, senderID, __typename, message_id, offline_threading_id, conversation_id, sender_email;
     public int ttl;
     public Long timestamp_precise;
-    public boolean unread, is_sponsored;
+    public boolean sent = false, delivered = false, unread, is_sponsored; //Delivered and sent are supported not by counstructor
     public ArrayList<Attachment> attachments = new ArrayList<>();
     public Message(JSONObject json) throws JSONException {
         update(json);
@@ -65,6 +65,10 @@ public class Message implements Comparator<Message>, Comparable<Message>{
                 attachments.add(new Attachment(json.getJSONArray("blob_attachments").getJSONObject(i)));
             }
         }
+        if(json.has("sent") && json.has("delivered")) {
+            sent = json.getBoolean("sent");
+            delivered = json.getBoolean("delivered");
+        }
         timestamp_precise = Long.valueOf(json.getString("timestamp_precise"));
 	}
 
@@ -78,14 +82,14 @@ public class Message implements Comparator<Message>, Comparable<Message>{
                         .put("id", senderID)))
                 .put("message_id", message_id)
                 .put("offline_threading_id", offline_threading_id).put("ttl", ttl)
-                .put("unread", unread).put("is_sponsored", is_sponsored)
+                .put("sent", sent).put("delivered", delivered).put("unread", unread).put("is_sponsored", is_sponsored)
                 .put("timestamp_precise", timestamp_precise).put("snippet", text)
                 .put("messageMetadata", new JSONObject().put("threadKey", new JSONObject().put("threadFbId", conversation_id)));
             JSONArray arr = new JSONArray();
 
             Iterator<Attachment> it = attachments.iterator();
             while(it.hasNext())
-                arr.put(it.next());
+                arr.put(it.next().toJSON());
             obj.put("blob_attachments", arr);
         } catch (JSONException e) {
             e.printStackTrace();

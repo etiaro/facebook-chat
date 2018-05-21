@@ -63,5 +63,12 @@ public class Attachment {
                 .put("attachmentUrl", attachmentUrl)
                 .put("type", type.toString());
     }
-    //TODO toJson and toString!
+    public String toString(){
+        try {
+            return toJSON().toString();
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }

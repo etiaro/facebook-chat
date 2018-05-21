@@ -16,7 +16,9 @@ import java.io.IOException;
 import java.net.HttpCookie;
 import java.net.SocketTimeoutException;
 import java.net.URI;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Random;
 
 public class Listen extends IntentService {
@@ -92,7 +94,7 @@ public class Listen extends IntentService {
             return;
 
         JSONObject result = new JSONObject(Utils.checkAndFormatResponse(sl.getData()));
-        Log.d("res", result.toString());
+        Log.e("res", result.toString());
         if (result.getString("t").equals("lb")) {
             ac.listenForm.put("sticky_token", result.getJSONObject("lb_info").getString("sticky"));
             ac.listenForm.put("sticky_pool", result.getJSONObject("lb_info").getString("pool"));
@@ -118,6 +120,9 @@ public class Listen extends IntentService {
     public interface ListenCallbacks{
         void newMessage(Message msg);
         void typing(String threadid, String userid, boolean isTyping);
+        void presenceUpdate(Map<String, Long> users);
+        void readReceipt(JSONObject ob);
+        void deliveryReceipt(JSONObject ob);
     }
     private void handleData(JSONObject ms, Account ac) throws JSONException {
         String userID;
@@ -141,28 +146,31 @@ public class Listen extends IntentService {
                 callbacks.typing(userID, threadID, isTyping);
                 break;
             case "chatproxy-presence":
+                HashMap<String, Long> users = new HashMap<>();
                 Iterator<?> keys = ms.getJSONObject("buddyList").keys();
-                while(keys.hasNext()){
+                while(keys.hasNext()) {
                     userID = (String)keys.next();
                     JSONObject obj = ms.getJSONObject("buddyList").getJSONObject(userID);
                     if (!obj.has("lat") || !obj.has("p")) continue;
                     if(obj.getInt("p") == 2)
-                        ac.onlineUsers.put(userID, 0l);
+                        users.put(userID, 0l);
                     else
-                        ac.onlineUsers.put(userID, obj.getLong("lat")*1000);
-                    Log.d("suc", "success");
+                        users.put(userID, obj.getLong("lat")*1000);
                 }
+                callbacks.presenceUpdate(users);
                 break;
             case "buddylist_overlay":
+                HashMap<String, Long> usersov = new HashMap<>();
                 Iterator<?> overlayKeys = ms.getJSONObject("overlay").keys();
                 while (overlayKeys.hasNext()){
                     userID = (String) overlayKeys.next();
                     JSONObject obj = ms.getJSONObject("overlay").getJSONObject(userID);
                     if(obj.getInt("a") == 2)
-                        ac.onlineUsers.put(userID, 0l);
+                        usersov.put(userID, 0l);
                     else
-                        ac.onlineUsers.put(userID, obj.getLong("la")*1000);
+                        usersov.put(userID, obj.getLong("la")*1000);
                 }
+                callbacks.presenceUpdate(usersov);
                 break;
             case "delta":
                 JSONObject delta = ms.getJSONObject("delta");
@@ -170,6 +178,12 @@ public class Listen extends IntentService {
                     case "NewMessage":
                         Message msg = new Message(delta);
                         callbacks.newMessage(msg);
+                        break;
+                    case "ReadReceipt":
+                        callbacks.readReceipt(delta);
+                        break;
+                    case "DeliveryReceipt":
+                        callbacks.deliveryReceipt(delta);
                         break;
                 }
                 break;
