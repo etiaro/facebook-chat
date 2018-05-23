@@ -151,7 +151,7 @@ public class Listen extends IntentService {
                 while(keys.hasNext()) {
                     userID = (String)keys.next();
                     JSONObject obj = ms.getJSONObject("buddyList").getJSONObject(userID);
-                    if (!obj.has("lat") || !obj.has("p")) continue;
+                    if (!obj.has("lat") || !obj.has("p")) continue; //TODO there can be only lat!
                     if(obj.getInt("p") == 2)
                         users.put(userID, 0l);
                     else
